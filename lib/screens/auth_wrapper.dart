@@ -96,8 +96,11 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
           );
         }
 
+        // Schedule biometric check AFTER build completes
         if (snapshot.connectionState == ConnectionState.active && _isCheckingBiometric) {
-          _checkBiometricRequirement(snapshot.data);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _checkBiometricRequirement(snapshot.data);
+          });
         }
 
         if (snapshot.hasData) {

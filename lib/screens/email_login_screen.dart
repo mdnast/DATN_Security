@@ -135,10 +135,11 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5F6368)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -152,19 +153,37 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.login_outlined,
-                    size: 80,
-                    color: Colors.deepPurple,
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4285F4), Color(0xFFEA4335)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4285F4).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.login_rounded,
+                      size: 64,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
+                  const Text(
                     'Đăng nhập',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: Color(0xFF202124),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -204,17 +223,20 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF5F6368)),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                        borderSide: const BorderSide(color: Color(0xFFE8EAED)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -233,10 +255,11 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Mật khẩu',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          color: const Color(0xFF5F6368),
                         ),
                         onPressed: () {
                           setState(() {
@@ -244,16 +267,19 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                           });
                         },
                       ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                        borderSide: const BorderSide(color: Color(0xFFE8EAED)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -268,27 +294,41 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _handleForgotPassword,
-                      child: Text(
+                      child: const Text(
                         'Quên mật khẩu?',
                         style: TextStyle(
-                          color: Colors.deepPurple[400],
+                          color: Color(0xFF4285F4),
                           fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
+                  Container(
                     height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4285F4), Color(0xFFEA4335)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4285F4).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 2,
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -304,6 +344,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                     ),
@@ -323,7 +364,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                         child: const Text(
                           'Đăng ký ngay',
                           style: TextStyle(
-                            color: Colors.deepPurple,
+                            color: Color(0xFF4285F4),
                             fontWeight: FontWeight.w600,
                           ),
                         ),

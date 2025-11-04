@@ -79,15 +79,23 @@ class _EmailListScreenState extends State<EmailListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text(
           'Hộp thư Gmail',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Color(0xFF202124),
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: _isLoading ? Colors.grey : const Color(0xFF4285F4),
+            ),
             onPressed: _isLoading ? null : _loadEmails,
             tooltip: 'Làm mới',
           ),
@@ -129,13 +137,22 @@ class _EmailListScreenState extends State<EmailListScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.deepPurple[50],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4285F4).withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.mail_outline,
                 size: 80,
-                color: Colors.deepPurple,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
@@ -156,16 +173,32 @@ class _EmailListScreenState extends State<EmailListScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _navigateToSetup,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4285F4).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              icon: const Icon(Icons.settings, color: Colors.white),
-              label: const Text(
-                'Cấu hình ngay',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+              child: ElevatedButton.icon(
+                onPressed: _navigateToSetup,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                ),
+                icon: const Icon(Icons.settings, color: Colors.white),
+                label: const Text(
+                  'Cấu hình ngay',
+                  style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
@@ -282,17 +315,31 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Widget _buildEmailItem(EmailMessage email) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Colors.deepPurple[100],
-        child: Text(
-          email.from.isNotEmpty ? email.from[0].toUpperCase() : '?',
-          style: TextStyle(
-            color: Colors.deepPurple[700],
-            fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: const Color(0xFFE8F0FE),
+          child: Text(
+            email.from.isNotEmpty ? email.from[0].toUpperCase() : '?',
+            style: const TextStyle(
+              color: Color(0xFF4285F4),
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
       title: Text(
         email.subject,
         style: TextStyle(
@@ -338,22 +385,24 @@ class _EmailListScreenState extends State<EmailListScreen> {
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(
-                color: Colors.deepPurple,
+              decoration: const BoxDecoration(
+                color: Color(0xFF4285F4),
                 shape: BoxShape.circle,
               ),
             ),
           ],
         ],
       ),
-      onTap: () {
-        // TODO: Navigate to email detail screen for phishing analysis
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chức năng phân tích phishing sẽ được thêm sau'),
-          ),
-        );
-      },
+        onTap: () {
+          // TODO: Navigate to email detail screen for phishing analysis
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Chức năng phân tích phishing sẽ được thêm sau'),
+              backgroundColor: Color(0xFF4285F4),
+            ),
+          );
+        },
+      ),
     );
   }
 

@@ -97,10 +97,11 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5F6368)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -114,19 +115,37 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.person_add_outlined,
-                    size: 80,
-                    color: Colors.deepPurple,
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF34A853), Color(0xFF4285F4)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF34A853).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.person_add_alt_1_rounded,
+                      size: 64,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
+                  const Text(
                     'Đăng ký tài khoản',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: Color(0xFF202124),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -165,17 +184,20 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     controller: _nameController,
                     decoration: InputDecoration(
                       labelText: 'Họ và tên',
-                      prefixIcon: const Icon(Icons.person_outline),
+                      prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF5F6368)),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                        borderSide: const BorderSide(color: Color(0xFFE8EAED)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -191,17 +213,20 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF5F6368)),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                        borderSide: const BorderSide(color: Color(0xFFE8EAED)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -220,10 +245,11 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Mật khẩu',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          color: const Color(0xFF5F6368),
                         ),
                         onPressed: () {
                           setState(() {
@@ -231,16 +257,19 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                           });
                         },
                       ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                        borderSide: const BorderSide(color: Color(0xFFE8EAED)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -259,10 +288,11 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
                       labelText: 'Xác nhận mật khẩu',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                          _obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          color: const Color(0xFF5F6368),
                         ),
                         onPressed: () {
                           setState(() {
@@ -270,16 +300,19 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                           });
                         },
                       ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                        borderSide: const BorderSide(color: Color(0xFFE8EAED)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -293,17 +326,30 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
+                  Container(
                     height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF34A853), Color(0xFF4285F4)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4285F4).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 2,
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -319,6 +365,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                     ),
@@ -338,7 +385,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                         child: const Text(
                           'Đăng nhập',
                           style: TextStyle(
-                            color: Colors.deepPurple,
+                            color: Color(0xFF4285F4),
                             fontWeight: FontWeight.w600,
                           ),
                         ),

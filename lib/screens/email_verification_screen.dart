@@ -106,17 +106,18 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   _authService.currentUser?.email ?? '';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
           TextButton.icon(
             onPressed: _handleLogout,
-            icon: const Icon(Icons.logout, size: 18),
-            label: const Text('Đăng xuất'),
+            icon: const Icon(Icons.logout_rounded, size: 18),
+            label: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600)),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[700],
+              foregroundColor: const Color(0xFFEA4335),
             ),
           ),
         ],
@@ -129,24 +130,35 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.deepPurple[50],
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFBBC04), Color(0xFFEA4335)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFBBC04).withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    Icons.mark_email_unread_outlined,
+                  child: const Icon(
+                    Icons.mark_email_unread_rounded,
                     size: 80,
-                    color: Colors.deepPurple,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 32),
-                Text(
+                const Text(
                   'Xác thực Email',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: Color(0xFF202124),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -162,15 +174,16 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: const Color(0xFFF8F9FA),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE8EAED)),
                   ),
                   child: Text(
                     email,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.deepPurple[700],
+                      color: Color(0xFF4285F4),
                     ),
                   ),
                 ),
@@ -178,14 +191,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: const Color(0xFFE8F0FE),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue[200]!),
+                    border: Border.all(color: const Color(0xFF4285F4).withOpacity(0.3)),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[700], size: 24),
-                      const SizedBox(width: 12),
+                      Icon(Icons.info_outline_rounded, color: Color(0xFF4285F4), size: 24),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,15 +207,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                               'Vui lòng kiểm tra email',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: Colors.blue[900],
+                                color: Color(0xFF202124),
                                 fontSize: 14,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
                               'Nhấp vào link trong email để xác thực tài khoản. Kiểm tra cả thư mục spam nếu không thấy.',
                               style: TextStyle(
-                                color: Colors.blue[800],
+                                color: Color(0xFF5F6368),
                                 fontSize: 12,
                               ),
                             ),
@@ -221,7 +234,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.deepPurple,
+                        color: Color(0xFF34A853),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -252,9 +265,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF4285F4),
+                            ),
                           )
-                        : const Icon(Icons.refresh),
+                        : const Icon(Icons.refresh_rounded),
                     label: Text(
                       _canResend
                           ? 'Gửi lại email'
@@ -265,13 +281,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.deepPurple,
+                      foregroundColor: const Color(0xFF4285F4),
                       side: BorderSide(
-                        color: _canResend ? Colors.deepPurple : Colors.grey[400]!,
-                        width: 1.5,
+                        color: _canResend ? const Color(0xFF4285F4) : const Color(0xFFE8EAED),
+                        width: 2,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),

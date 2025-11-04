@@ -55,23 +55,42 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.lock_outline,
-                  size: 80,
-                  color: Colors.deepPurple,
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4285F4).withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.shield_outlined,
+                    size: 80,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 40),
-                Text(
+                const Text(
                   'Chào mừng!',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: Color(0xFF202124),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Đăng nhập để tiếp tục',
+                  'Đăng nhập để bảo vệ khỏi phishing',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey[600],
@@ -101,17 +120,29 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                     ),
                   ),
                 _isLoading
-                    ? const CircularProgressIndicator()
-                    : SizedBox(
+                    ? const CircularProgressIndicator(color: Color(0xFF4285F4))
+                    : Container(
                         width: double.infinity,
                         height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFDADCE0), width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
                         child: ElevatedButton.icon(
                           onPressed: _handleGoogleSignIn,
                           icon: Image.network(
                             'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
                             height: 24,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.g_mobiledata, size: 24);
+                              return const Icon(Icons.g_mobiledata_rounded, size: 24, color: Color(0xFF4285F4));
                             },
                           ),
                           label: const Text(
@@ -119,15 +150,15 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
+                              color: Color(0xFF3C4043),
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: Colors.grey[700],
-                            elevation: 2,
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Colors.grey[300]!),
                             ),
                           ),
                         ),
@@ -147,24 +178,39 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
+                Container(
                   width: double.infinity,
                   height: 56,
-                  child: OutlinedButton.icon(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4285F4).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pushNamed(context, '/email-register');
                     },
-                    icon: const Icon(Icons.email_outlined),
+                    icon: const Icon(Icons.email_outlined, color: Colors.white),
                     label: const Text(
                       'Đăng ký bằng Email',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.deepPurple,
-                      side: const BorderSide(color: Colors.deepPurple, width: 2),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -176,11 +222,12 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/email-login');
                   },
-                  child: Text(
+                  child: const Text(
                     'Đã có tài khoản? Đăng nhập bằng Email',
                     style: TextStyle(
-                      color: Colors.deepPurple[400],
+                      color: Color(0xFF4285F4),
                       fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

@@ -195,36 +195,57 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
-        title: const Text(
-          'Phát hiện Email Phishing',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.shield, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            const Flexible(
+              child: Text(
+                'Phát hiện Phishing',
+                style: TextStyle(
+                  color: Color(0xFF202124),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
             tooltip: 'Thông báo',
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
               onTap: _showSettingsBottomSheet,
               child: CircleAvatar(
                 radius: 18,
-                backgroundColor: Colors.white,
+                backgroundColor: const Color(0xFF4285F4),
                 backgroundImage: _userData?['photoUrl'] != null
                     ? NetworkImage(_userData!['photoUrl'])
                     : null,
                 child: _userData?['photoUrl'] == null
-                    ? Icon(
+                    ? const Icon(
                         Icons.person,
-                        color: Colors.deepPurple,
+                        color: Colors.white,
                         size: 20,
                       )
                     : null,
@@ -237,13 +258,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             UserAccountsDrawerHeader(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.deepPurple,
-                    Colors.deepPurple[700]!,
+                    Color(0xFF4285F4), // Google Blue
+                    Color(0xFF34A853), // Google Green
                   ],
                 ),
               ),
@@ -253,10 +274,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? NetworkImage(_userData!['photoUrl'])
                     : null,
                 child: _userData?['photoUrl'] == null
-                    ? Icon(
+                    ? const Icon(
                         Icons.person,
                         size: 40,
-                        color: Colors.deepPurple,
+                        color: Color(0xFF4285F4),
                       )
                     : null,
               ),
@@ -288,13 +309,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   ListTile(
-                    leading: Icon(Icons.shield_outlined, color: Colors.deepPurple),
+                    leading: const Icon(Icons.shield_outlined, color: Color(0xFF4285F4)),
                     title: const Text(
                       'Kiểm tra Phishing',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     selected: true,
-                    selectedTileColor: Colors.deepPurple[50],
+                    selectedTileColor: Color(0xFFE8F0FE),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     onTap: () => Navigator.pop(context),
                   ),
                   ListTile(
@@ -320,8 +344,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   ListTile(
-                    leading: Icon(Icons.security_outlined, color: Colors.deepPurple),
+                    leading: const Icon(Icons.security_outlined, color: Color(0xFF34A853)),
                     title: const Text('Bảo mật'),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                       _showSettingsBottomSheet();
@@ -363,13 +390,24 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.deepPurple[50],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4285F4).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.shield,
                 size: 100,
-                color: Colors.deepPurple,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 32),
@@ -399,23 +437,37 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 32),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue[200]!),
+                color: const Color(0xFFFFF8E1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFBBC04), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFBBC04).withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  Icon(Icons.lightbulb_outline, color: Colors.blue[700], size: 28),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBBC04),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.lightbulb, color: Colors.white, size: 24),
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Cách sử dụng',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue[900],
+                            color: Color(0xFFF57C00),
                             fontSize: 15,
                           ),
                         ),
@@ -423,7 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'Nhấn nút "Kiểm tra Email" để tải lên và phân tích email của bạn',
                           style: TextStyle(
-                            color: Colors.blue[800],
+                            color: Colors.grey[800],
                             fontSize: 13,
                           ),
                         ),
@@ -436,16 +488,38 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const EmailListScreen()),
-          );
-        },
-        backgroundColor: Colors.deepPurple,
-        icon: const Icon(Icons.security),
-        label: const Text('Kiểm tra Email'),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEA4335), Color(0xFFFBBC04)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFEA4335).withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const EmailListScreen()),
+            );
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.email_outlined, color: Colors.white),
+          label: const Text(
+            'Kiểm tra Email',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -68,11 +68,12 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: const Color(0xFF4285F4),
         title: const Text(
           'Kết nối Gmail',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -86,41 +87,42 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
+                  color: const Color(0xFFE8F0FE),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue[200]!),
+                  border: Border.all(color: const Color(0xFF4285F4).withOpacity(0.3)),
                 ),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue[700]),
-                        const SizedBox(width: 8),
+                        Icon(Icons.info_outline_rounded, color: Color(0xFF4285F4)),
+                        SizedBox(width: 8),
                         Text(
                           'Hướng dẫn',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue[900],
+                            color: Color(0xFF202124),
                             fontSize: 16,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
                       'Để kết nối Gmail, bạn cần tạo Mật khẩu ứng dụng:',
-                      style: TextStyle(color: Colors.blue[800]),
+                      style: TextStyle(color: Color(0xFF5F6368)),
                     ),
-                    const SizedBox(height: 8),
-                    _buildStep('1', 'Vào myaccount.google.com'),
-                    _buildStep('2', 'Chọn Security → 2-Step Verification'),
-                    _buildStep('3', 'Cuộn xuống → App passwords'),
-                    _buildStep('4', 'Tạo mật khẩu mới cho "Mail"'),
-                    _buildStep('5', 'Sao chép mã và dán vào đây'),
+                    SizedBox(height: 8),
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              _buildStep('1', 'Vào myaccount.google.com'),
+              _buildStep('2', 'Chọn Security → 2-Step Verification'),
+              _buildStep('3', 'Cuộn xuống → App passwords'),
+              _buildStep('4', 'Tạo mật khẩu mới cho "Mail"'),
+              _buildStep('5', 'Sao chép mã và dán vào đây'),
               const SizedBox(height: 32),
               TextFormField(
                 controller: _emailController,
@@ -128,9 +130,20 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
                 decoration: InputDecoration(
                   labelText: 'Email Gmail',
                   hintText: 'example@gmail.com',
-                  prefixIcon: const Icon(Icons.email),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF5F6368)),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE8EAED)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -150,10 +163,11 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
                 decoration: InputDecoration(
                   labelText: 'App Password',
                   hintText: 'xxxx xxxx xxxx xxxx',
-                  prefixIcon: const Icon(Icons.lock),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      color: const Color(0xFF5F6368),
                     ),
                     onPressed: () {
                       setState(() {
@@ -161,8 +175,19 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
                       });
                     },
                   ),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE8EAED)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF4285F4), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -173,25 +198,40 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
                 },
               ),
               const SizedBox(height: 32),
-              SizedBox(
+              Container(
                 width: double.infinity,
-                height: 50,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF34A853), Color(0xFF4285F4)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF34A853).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveCredentials,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                       : const Text(
                           'Lưu cấu hình',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                 ),
@@ -205,16 +245,18 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
 
   Widget _buildStep(String number, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 24,
-            height: 24,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: Colors.blue[700],
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF4285F4), Color(0xFF34A853)],
+              ),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -222,16 +264,23 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
                 number,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: Colors.blue[800], fontSize: 13),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: Color(0xFF202124),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ],
