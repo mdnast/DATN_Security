@@ -79,4 +79,111 @@ class AuthService {
   }
 
   User? get currentUser => _auth.currentUser;
+
+  // Email/Password Authentication
+  Future<Map<String, dynamic>?> signUpWithEmail({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    try {
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      final User? user = userCredential.user;
+      
+      if (user != null) {
+        // Update display name
+        await user.updateDisplayName(displayName);
+        
+        // Send email verification
+        await user.sendEmailVerification();
+        
+        final userData = {
+          'uid': user.uid,
+          'email': user.email,
+          'displayName': displayName,
+          'photoUrl': user.photoURL,
+          'emailVerified': user.emailVerified,
+        };
+        
+        await _saveUserData(userData);
+        return userData;
+      }
+      
+      return null;
+    } catch (error) {
+      print('Error signing up with email: $error');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      final User? user = userCredential.user;
+      
+      if (user != null) {
+        final userData = {
+          'uid': user.uid,
+          'email': user.email,
+          'displayName': user.displayName,
+          'photoUrl': user.photoURL,
+          'emailVerified': user.emailVerified,
+        };
+        
+        await _saveUserData(userData);
+        return userData;
+      }
+      
+      return null;
+    } catch (error) {
+      print('Error signing in with email: $error');
+      rethrow;
+    }
+  }
+
+  Future<void> sendEmailVerification() async {
+    try {
+      final User? user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } catch (error) {
+      print('Error sending email verification: $error');
+      rethrow;
+    }
+  }
+
+  Future<void> reloadUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } catch (error) {
+      print('Error reloading user: $error');
+      rethrow;
+    }
+  }
+
+  Future<bool> isEmailVerified() async {
+    await reloadUser();
+    return _auth.currentUser?.emailVerified ?? false;
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (error) {
+      print('Error sending password reset email: $error');
+      rethrow;
+    }
+  }
 }

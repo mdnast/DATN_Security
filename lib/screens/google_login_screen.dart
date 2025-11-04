@@ -152,7 +152,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   height: 56,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // TODO: Navigate to email registration screen
+                      Navigator.pushNamed(context, '/email-register');
                     },
                     icon: const Icon(Icons.email_outlined),
                     label: const Text(
@@ -168,6 +168,19 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/email-login');
+                  },
+                  child: Text(
+                    'Đã có tài khoản? Đăng nhập bằng Email',
+                    style: TextStyle(
+                      color: Colors.deepPurple[400],
+                      fontSize: 14,
                     ),
                   ),
                 ),

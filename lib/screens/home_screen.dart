@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirmed == true && mounted) {
       await _authService.signOut();
-      Navigator.pushReplacementNamed(context, '/');
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     }
   }
 
@@ -115,7 +115,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ListTile(
                         leading: const Icon(Icons.check_circle, color: Colors.green),
                         title: const Text('Đăng nhập thành công'),
-                        subtitle: const Text('Bạn đã đăng nhập bằng Google'),
+                        subtitle: Text(_userData?['email']?.contains('gmail') == true 
+                          ? 'Bạn đã đăng nhập bằng Google' 
+                          : 'Bạn đã đăng nhập bằng Email'),
                       ),
                     ],
                   ),
