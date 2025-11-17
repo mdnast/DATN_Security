@@ -5,6 +5,7 @@ import '../models/scan_result.dart';
 import '../services/email_analysis_service.dart';
 import '../services/scan_history_service.dart';
 import '../services/notification_service.dart';
+import 'email_ai_chat_screen.dart';
 
 class EmailDetailScreen extends StatefulWidget {
   final EmailMessage email;
@@ -113,6 +114,20 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         ),
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'Hỏi AI về email',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EmailAiChatScreen(email: widget.email),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

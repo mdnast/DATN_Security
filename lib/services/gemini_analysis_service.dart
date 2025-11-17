@@ -5,6 +5,8 @@ class GeminiAnalysisService {
   // API Key - NÊN LƯU TRONG .env HOẶC SECURE STORAGE
   // Tạm thời hardcode để test, sau này cần di chuyển ra ngoài
   static const String _apiKey = 'AIzaSyBcFkPZWI0npRvYiQ55tZHSG_cm79Vv_5A';
+  // API key dành riêng cho chatbot (hỏi đáp), nên thay bằng key mới của bạn
+  static const String _chatApiKey = 'AIzaSyAgvmioOQ87JgTFgIftoFAwF5T02v5_NkE';
   
   // Danh sách models để fallback nếu model chính lỗi
   static const List<String> _availableModels = [
@@ -21,6 +23,60 @@ class GeminiAnalysisService {
       model: _currentModel,
       apiKey: _apiKey,
     );
+  }
+  
+  Future<String> askQuestionAboutEmail({
+    required String anonymizedSubject,
+    required String anonymizedBody,
+    required String anonymizedFrom,
+    required String question,
+  }) async {
+    int maxRetries = _availableModels.length;
+    int attempt = 0;
+
+    while (attempt < maxRetries) {
+      try {
+        final chatModel = GenerativeModel(
+          model: _currentModel,
+          apiKey: _chatApiKey.isNotEmpty ? _chatApiKey : _apiKey,
+        );
+
+        final prompt = '''
+Bạn là trợ lý an toàn email. Dưới đây là nội dung một email (đã được ẩn bớt thông tin riêng tư):
+
+FROM: $anonymizedFrom
+SUBJECT: $anonymizedSubject
+BODY: $anonymizedBody
+
+Người dùng đang hỏi về email này:
+"$question"
+
+Yêu cầu trả lời:
+- Trả lời bằng tiếng Việt.
+- Giải thích ngắn gọn, dễ hiểu, tập trung vào nội dung và mức độ an toàn của email.
+- Nếu không đủ dữ liệu để trả lời chính xác, hãy nói rõ bạn không chắc và gợi ý người dùng nên làm gì.
+''';
+
+        final response = await chatModel.generateContent([Content.text(prompt)]);
+        final text = response.text?.trim();
+
+        if (text == null || text.isEmpty) {
+          throw Exception('Không nhận được phản hồi từ Gemini AI');
+        }
+
+        return text;
+      } catch (e) {
+        if (attempt < maxRetries - 1) {
+          _switchToFallbackModel();
+          attempt++;
+          continue;
+        } else {
+          throw Exception('Lỗi khi hỏi Gemini về email: $e');
+        }
+      }
+    }
+
+    throw Exception('Unexpected error in askQuestionAboutEmail');
   }
   
   /// Thử đổi sang model khác nếu model hiện tại lỗi
@@ -120,25 +176,25 @@ class GeminiAnalysisService {
     required String from,
   }) async {
     final simplePrompt = '''
-Phân tích email này. Chỉ trả về JSON hợp lệ, không gì khác.
+Chỉ trả về MỘT JSON hợp lệ, không markdown, không text khác.
 
-Từ: $from
-Tiêu đề: $subject
-Nội dung: $body
+FROM:$from
+SUBJECT:$subject
+BODY:$body
 
-Trả về CHÍNH XÁC format JSON này (dùng nháy đơn '' trong text, KHÔNG dùng ngoặc kép ""):
+JSON:
 {
   "risk_score": 50,
   "risk_level": "Medium",
-  "summary": "Tóm tắt ngắn gọn một dòng",
+  "summary": "tóm tắt",
   "red_flags": [],
-  "recommendations": ["Một khuyến nghị"]
+  "recommendations": []
 }
 
-risk_score: 0-100 (0=an toàn, 100=nguy hiểm)
-risk_level: Low / Medium / High / Critical
-
-CHỈ TRẢ VỀ JSON HỢP LỆ. KHÔNG MARKDOWN. KHÔNG TEXT THỪA.
+Quy tắc:
+- risk_score 0-100
+- Không dùng dấu " trong string, nếu cần thì dùng '.
+- Không xuống dòng trong string.
 ''';
 
     print('Sending simplified request...');
@@ -157,44 +213,32 @@ CHỈ TRẢ VỀ JSON HỢP LỆ. KHÔNG MARKDOWN. KHÔNG TEXT THỪA.
     required String from,
   }) {
     return '''
-Phân tích email phishing. Trả về ĐÚNG format JSON dưới đây, KHÔNG thêm text nào khác.
+Phân tích email phishing và CHỈ trả về MỘT JSON hợp lệ, không markdown, không text khác.
 
-**LƯU Ý:** Tiêu đề và nội dung email đã được làm mờ thông tin cá nhân. Địa chỉ người gửi GIỮ NGUYÊN để bạn phân tích domain.
+FROM:$from
+SUBJECT:$subject
+BODY:$body
 
-Người gửi: $from (DOMAIN THẬT - phân tích kỹ)
-Tiêu đề: $subject
-Nội dung: $body
-
-**QUAN TRỌNG về JSON:**
-- BẮT BUỘC: JSON phải hợp lệ 100%
-- Nội dung TIẾNG VIỆT là OK, nhưng KHÔNG ĐƯỢC có dấu ngoặc kép (") trong nội dung text
-- Nếu cần trích dẫn, dùng dấu nháy đơn ('')
-- KHÔNG xuống dòng trong string values, viết trên một dòng
-- Ví dụ SAI: "content": "Email có link "click here" nguy hiểm"
-- Ví dụ ĐÚNG: "content": "Email có link 'click here' nguy hiểm"
-
-Trả về JSON theo format SAU (KHÔNG thêm markdown, KHÔNG thêm text):
+JSON MẪU (giữ key, thay giá trị):
 {
   "risk_score": 15,
   "risk_level": "Low",
-  "summary": "Email an toàn từ tổ chức giáo dục",
+  "summary": "tóm tắt",
   "detailed_analysis": {
-    "sender_analysis": "Domain giáo dục hợp pháp",
-    "content_analysis": "Thông báo chính thức về lịch học",
-    "technical_analysis": "Không có link nguy hiểm",
-    "context_analysis": "Email thông báo học tập bình thường"
+    "sender_analysis": "phân tích người gửi",
+    "content_analysis": "phân tích nội dung",
+    "technical_analysis": "phân tích kỹ thuật",
+    "context_analysis": "phân tích bối cảnh"
   },
   "red_flags": [],
-  "recommendations": ["Email an toàn có thể đọc"]
+  "recommendations": []
 }
 
-Đánh giá risk_score:
-- 0-25: Low (email an toàn)
-- 26-50: Medium (có dấu hiệu đáng ngờ)  
-- 51-75: High (nhiều dấu hiệu lừa đảo)
-- 76-100: Critical (chắc chắn phishing)
-
-CHỈ trả về JSON VALID, không thêm gì khác. Kiểm tra lại JSON trước khi trả về.
+Quy tắc:
+- risk_score 0-100 (0 an toàn, 100 rất nguy hiểm)
+- risk_level: Low / Medium / High / Critical
+- Không dùng dấu " trong string, nếu cần thì dùng '.
+- Không xuống dòng trong nội dung string.
 ''';
   }
 
@@ -422,7 +466,7 @@ CHỈ trả về JSON VALID, không thêm gì khác. Kiểm tra lại JSON trư�
     try {
       print('Testing Gemini API connection...');
       final response = await _model.generateContent([
-        Content.text('Reply with just: {"status": "ok"}')
+        Content.text('{"status":"ok"}')
       ]);
       
       print('Test response: ${response.text}');

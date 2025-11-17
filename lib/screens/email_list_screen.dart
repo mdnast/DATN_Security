@@ -6,6 +6,7 @@ import '../services/scan_history_service.dart';
 import '../models/scan_result.dart';
 import 'imap_setup_screen.dart';
 import 'email_detail_screen.dart';
+import 'gmail_ai_chat_screen.dart';
 
 class EmailListScreen extends StatefulWidget {
   const EmailListScreen({super.key});
@@ -23,6 +24,12 @@ class _EmailListScreenState extends State<EmailListScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   String? _loginMethod;
+  final List<String> _gmailSuggestedQuestions = const [
+    'Làm sao nhận diện email lừa đảo trong Gmail?',
+    'Khi nhận email đáng ngờ tôi nên làm gì?',
+    'Hướng dẫn bảo vệ tài khoản Gmail khỏi bị hack.',
+    'Giải thích cách báo cáo spam/phishing trong Gmail.',
+  ];
 
   @override
   void initState() {
@@ -105,6 +112,18 @@ class _EmailListScreenState extends State<EmailListScreen> {
         iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'Chat AI Gmail',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GmailAiChatScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(
               Icons.refresh_rounded,
               color: _isLoading ? Colors.grey : const Color(0xFF4285F4),
@@ -156,7 +175,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4285F4).withOpacity(0.3),
+                  color: const Color(0xFF4285F4).withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 8),
                   ),
@@ -194,7 +213,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4285F4).withOpacity(0.3),
+                  color: const Color(0xFF4285F4).withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -317,13 +336,67 @@ class _EmailListScreenState extends State<EmailListScreen> {
     return RefreshIndicator(
       onRefresh: _loadEmails,
       child: ListView.separated(
-        itemCount: _emails.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        padding: const EdgeInsets.only(top: 8),
+        itemCount: _emails.length + 1,
+        separatorBuilder: (context, index) {
+          if (index == 0) return const SizedBox.shrink();
+          return const Divider(height: 1);
+        },
         itemBuilder: (context, index) {
-          final email = _emails[index];
+          if (index == 0) {
+            return _buildGmailSuggestions();
+          }
+          final email = _emails[index - 1];
           return _buildEmailItem(email);
         },
       ),
+    );
+  }
+
+  Widget _buildGmailSuggestions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Text(
+            'Gợi ý hỏi AI về Gmail',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 44,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            itemCount: _gmailSuggestedQuestions.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final q = _gmailSuggestedQuestions[index];
+              return ActionChip(
+                label: Text(
+                  q,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GmailAiChatScreen(
+                        initialQuestion: q,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -371,7 +444,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
             : null,
         boxShadow: [
           BoxShadow(
-            color: (borderColor ?? Colors.black).withOpacity(0.08),
+            color: (borderColor ?? Colors.black).withValues(alpha: 0.08),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -382,7 +455,8 @@ class _EmailListScreenState extends State<EmailListScreen> {
         leading: Stack(
           children: [
             CircleAvatar(
-              backgroundColor: borderColor?.withOpacity(0.15) ?? const Color(0xFFE8F0FE),
+              backgroundColor:
+                  borderColor?.withValues(alpha: 0.15) ?? const Color(0xFFE8F0FE),
               child: Text(
                 email.from.isNotEmpty ? email.from[0].toUpperCase() : '?',
                 style: TextStyle(

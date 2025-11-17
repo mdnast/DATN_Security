@@ -27,16 +27,6 @@ class EmailAnalysisService {
       print('From: ${email.from}');
       print('Subject: ${email.subject}');
       print('========================================');
-      
-      // Test Gemini connection first
-      print('Testing Gemini connection...');
-      final testResult = await _geminiService.testConnection();
-      print('Gemini connection test: ${testResult ? "SUCCESS" : "FAILED"}');
-      
-      if (!testResult) {
-        throw Exception('Gemini API không phản hồi');
-      }
-      
       // Bước 1: Làm mờ dữ liệu cá nhân
       print('Step 1: Anonymizing email...');
       anonymizationInfo = _anonymizationService.anonymizeEmail(
@@ -48,9 +38,10 @@ class EmailAnalysisService {
 
       // Bước 2: Gửi email đã làm mờ lên Gemini
       print('Step 2: Sending to Gemini...');
+      final anonymizedBody = _truncate(anonymizationInfo['body'] as String);
       geminiResult = await _geminiService.analyzeEmail(
         anonymizedSubject: anonymizationInfo['subject'],
-        anonymizedBody: anonymizationInfo['body'],
+        anonymizedBody: anonymizedBody,
         anonymizedFrom: anonymizationInfo['from'],
       );
       print('Gemini analysis complete!');
@@ -137,6 +128,32 @@ class EmailAnalysisService {
       detectedThreats: threats.toSet().toList(),
       analysisDetails: analysisDetails,
     );
+  }
+
+  Future<String> askAiAboutEmail(EmailMessage email, String question) async {
+    _anonymizationService.reset();
+
+    final anonymizationInfo = _anonymizationService.anonymizeEmail(
+      subject: email.subject,
+      body: email.body ?? email.snippet,
+      from: email.from,
+    );
+
+    final anonymizedBody = _truncate(anonymizationInfo['body'] as String);
+
+    final answer = await _geminiService.askQuestionAboutEmail(
+      anonymizedSubject: anonymizationInfo['subject'],
+      anonymizedBody: anonymizedBody,
+      anonymizedFrom: anonymizationInfo['from'],
+      question: question,
+    );
+
+    return answer;
+  }
+
+  String _truncate(String text, {int maxChars = 2000}) {
+    if (text.length <= maxChars) return text;
+    return text.substring(0, maxChars);
   }
 
   String _extractDomain(String email) {
