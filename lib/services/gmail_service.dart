@@ -77,9 +77,11 @@ class GmailService {
         // Wait for all API calls to complete at once
         final results = await Future.wait(futures);
         
-        // Parse all results
-        for (var fullMessage in results) {
-          final emailMessage = _parseGmailMessage(fullMessage);
+        // Parse all results (and fetch avatar URLs) in parallel
+        final parsedFutures = results.map(_parseGmailMessage).toList();
+        final parsedMessages = await Future.wait(parsedFutures);
+
+        for (final emailMessage in parsedMessages) {
           if (emailMessage != null) {
             emails.add(emailMessage);
           }
@@ -223,7 +225,7 @@ class GmailService {
     client.close();
   }
 
-  EmailMessage? _parseGmailMessage(gmail.Message message) {
+  Future<EmailMessage?> _parseGmailMessage(gmail.Message message) async {
     try {
       final headers = message.payload?.headers ?? [];
       
@@ -263,6 +265,18 @@ class GmailService {
       print('Error parsing Gmail message: $error');
       return null;
     }
+  }
+
+  String _extractEmailAddress(String fromHeader) {
+    final trimmed = fromHeader.trim();
+    if (trimmed.isEmpty) return '';
+
+    final match = RegExp(r'<([^>]+)>').firstMatch(trimmed);
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1)!.trim();
+    }
+
+    return trimmed;
   }
 
   String _decodeMimeHeader(String? value) {

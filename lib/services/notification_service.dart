@@ -162,6 +162,7 @@ class NotificationService {
           snippet: emailData['snippet'],
           body: emailData['body'],
           date: DateTime.parse(emailData['date']),
+          photoUrl: emailData['photoUrl'],
         );
       } else {
         // Fallback: tạo email từ notification data
@@ -172,6 +173,7 @@ class NotificationService {
           snippet: data['snippet'] ?? '',
           body: data['body'] ?? '',
           date: DateTime.parse(data['date'] ?? DateTime.now().toIso8601String()),
+          photoUrl: data['photoUrl'],
         );
       }
 

@@ -108,25 +108,27 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 16,
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Text(
               'WardMail',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF202124),
+                color: onSurface,
               ),
             ),
-            SizedBox(width: 6),
-            DecoratedBox(
+            const SizedBox(width: 6),
+            const DecoratedBox(
               decoration: BoxDecoration(
                 color: Color(0xFF1877F2),
                 shape: BoxShape.circle,
@@ -293,6 +295,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
   Widget _buildAnalysisResult() {
     if (_scanResult == null) return const SizedBox.shrink();
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     Color statusColor;
     String statusText;
     IconData statusIcon;
@@ -319,7 +324,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: statusColor, width: 2),
         boxShadow: [
@@ -381,7 +386,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
               statusDescription,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[800],
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 height: 1.5,
               ),
             ),
@@ -405,21 +410,25 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: isDark
+                          ? const Color(0xFFEA4335).withOpacity(0.16)
+                          : const Color(0xFFEA4335).withOpacity(0.06),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.red[200]!),
+                      border: Border.all(
+                        color: const Color(0xFFEA4335).withOpacity(isDark ? 0.6 : 0.35),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.bug_report, size: 14, color: Colors.red[700]),
+                        const Icon(Icons.bug_report, size: 14, color: Color(0xFFEA4335)),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             threat,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.red[900],
+                              color: isDark ? Colors.white : const Color(0xFFB31412),
                               fontWeight: FontWeight.w500,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -427,7 +436,11 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.touch_app, size: 12, color: Colors.red[400]),
+                        Icon(
+                          Icons.touch_app,
+                          size: 12,
+                          color: const Color(0xFFEA4335).withOpacity(0.7),
+                        ),
                       ],
                     ),
                   ),
@@ -460,7 +473,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -481,7 +494,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
             ),
           ),
           const Divider(height: 24),
-          _buildInfoRow('Từ:', widget.email.from),
+          _buildSenderRow(),
           const SizedBox(height: 12),
           _buildInfoRow('Tiêu đề:', widget.email.subject),
           const SizedBox(height: 12),
@@ -502,7 +515,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: Theme.of(context).colorScheme.surfaceVariant,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey[200]!),
             ),
@@ -510,7 +523,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
               bodyText,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[800],
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 height: 1.6,
               ),
             ),
@@ -564,10 +577,57 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         Expanded(
           child: SelectableText(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF202124),
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSenderRow() {
+    final from = widget.email.from.trim();
+    final initial = from.isNotEmpty ? from[0].toUpperCase() : '?';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        CircleAvatar(
+          radius: 22,
+          backgroundColor: const Color(0xFFE8F0FE),
+          child: Text(
+            initial,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF4285F4),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                from,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('dd/MM/yyyy HH:mm').format(widget.email.date),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -577,6 +637,11 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
   Widget _buildGeminiResults() {
     final geminiData = _scanResult!.analysisDetails['gemini'] as Map<String, dynamic>?;
     if (geminiData == null) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surface = theme.colorScheme.surface;
+    final bodyColor = theme.textTheme.bodyMedium?.color;
 
     final reasons = geminiData['reasons'] as List<dynamic>? ?? [];
     final recommendations = geminiData['recommendations'] as List<dynamic>? ?? [];
@@ -607,15 +672,26 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purple[50]!, Colors.blue[50]!],
-            ),
+            gradient: isDark
+                ? null
+                : LinearGradient(
+                    colors: [Colors.purple[50]!, Colors.blue[50]!],
+                  ),
+            color: isDark ? surface : null,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.purple[200]!),
+            border: Border.all(
+              color: isDark
+                  ? theme.colorScheme.primary.withOpacity(0.4)
+                  : Colors.purple[200]!,
+            ),
           ),
           child: Row(
             children: [
-              Icon(Icons.auto_awesome, color: Colors.purple[700], size: 20),
+              Icon(
+                Icons.auto_awesome,
+                color: isDark ? theme.colorScheme.primary : Colors.purple[700],
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Phân tích bởi Gemini AI',
@@ -671,7 +747,10 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                 Expanded(
                   child: Text(
                     reason.toString(),
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: bodyColor?.withOpacity(0.8),
+                    ),
                   ),
                 ),
               ],
@@ -693,18 +772,26 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: isDark ? surface : Colors.blue[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(
+                color: isDark
+                    ? theme.colorScheme.primary.withOpacity(0.5)
+                    : Colors.blue[200]!,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.tips_and_updates, size: 16, color: Colors.blue[700]),
+                Icon(
+                  Icons.tips_and_updates,
+                  size: 16,
+                  color: isDark ? theme.colorScheme.primary : Colors.blue[700],
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     rec.toString(),
-                    style: TextStyle(fontSize: 12, color: Colors.blue[900]),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
                   ),
                 ),
               ],
@@ -737,7 +824,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                       ),
@@ -746,7 +833,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                           entry.value.toString(),
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[800],
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                       ),
@@ -786,7 +873,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
               threat,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[800],
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 height: 1.5,
               ),
             ),

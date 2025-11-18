@@ -111,6 +111,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           snippet: emailData['snippet'] ?? '',
           body: emailData['body'] ?? emailData['snippet'] ?? '',
           date: DateTime.parse(emailData['date']),
+          photoUrl: emailData['photoUrl'],
         );
       } else {
         print('⚠️ Email not in cache, fetching from Gmail...');
@@ -132,6 +133,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               'snippet': email.snippet,
               'body': email.body ?? email.snippet,
               'date': email.date.toIso8601String(),
+              'photoUrl': email.photoUrl,
             });
             await _storage.write(key: 'email_cache_$emailId', value: emailJson);
             print('Email cached for future use');
@@ -149,6 +151,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 notification.data!['timestamp'] ?? 
                 DateTime.now().toIso8601String()
               ),
+              photoUrl: notification.data!['photoUrl'],
             );
             print('⚠️ Using notification data as fallback');
           }
@@ -166,6 +169,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               notification.data!['timestamp'] ?? 
               DateTime.now().toIso8601String()
             ),
+            photoUrl: notification.data!['photoUrl'],
           );
           print('Using notification data after Gmail error');
         }
@@ -290,9 +294,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final unreadCount = _notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Column(

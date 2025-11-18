@@ -48,7 +48,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -105,7 +105,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                             width: double.infinity,
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: const Color(0xFFDADCE0), width: 1),
                               boxShadow: [
@@ -188,7 +188,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                                 ],
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor: Theme.of(context).colorScheme.surface,
                                 elevation: 0,
                                 shadowColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(

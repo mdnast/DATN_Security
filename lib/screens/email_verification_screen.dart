@@ -106,9 +106,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   _authService.currentUser?.email ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [

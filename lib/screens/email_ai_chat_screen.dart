@@ -82,31 +82,32 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
+
     final email = widget.email;
     final bodyText = email.body ?? email.snippet;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
+        title: Text(
           'Hỏi AI về email',
           style: TextStyle(
-            color: Color(0xFF202124),
+            color: onSurface,
             fontWeight: FontWeight.w600,
           ),
         ),
         iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
         elevation: 0,
       ),
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Container(
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -142,7 +143,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: Theme.of(context).colorScheme.surfaceVariant,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey[300]!),
                   ),
@@ -152,7 +153,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
                       bodyText,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[800],
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ),
@@ -205,9 +206,9 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
                     decoration: BoxDecoration(
                       color: msg.isUser
                           ? const Color(0xFF4285F4)
-                          : (msg.isError
-                              ? Colors.red[50]
-                              : Colors.white),
+                            : (msg.isError
+                                ? Colors.red[50]
+                                : Theme.of(context).colorScheme.surface),
                       borderRadius: BorderRadius.circular(12).copyWith(
                         bottomLeft:
                             msg.isUser ? const Radius.circular(12) : Radius.zero,
@@ -229,7 +230,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
                             ? Colors.white
                             : (msg.isError
                                 ? Colors.red[900]
-                                : const Color(0xFF202124)),
+                                : onSurface),
                         fontSize: 14,
                       ),
                     ),
@@ -252,7 +253,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
                       decoration: InputDecoration(
                         hintText: 'Hỏi AI về email này...',
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(color: Colors.grey[300]!),

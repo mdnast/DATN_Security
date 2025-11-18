@@ -58,6 +58,25 @@ class _EmailListScreenState extends State<EmailListScreen> {
     super.dispose();
   }
 
+  Color _avatarColorFor(String from) {
+    // Tạo màu avatar mềm kiểu Gmail dựa trên email người gửi
+    const colors = <Color>[
+      Color(0xFF1E88E5),
+      Color(0xFFD81B60),
+      Color(0xFF8E24AA),
+      Color(0xFF43A047),
+      Color(0xFFFB8C00),
+      Color(0xFF6D4C41),
+      Color(0xFF3949AB),
+      Color(0xFF00897B),
+    ];
+
+    if (from.isEmpty) return const Color(0xFF4285F4);
+
+    final hash = from.codeUnits.fold<int>(0, (prev, code) => prev + code);
+    return colors[hash % colors.length];
+  }
+
   String _decodeHtmlEntities(String input) {
     if (input.isEmpty) return input;
 
@@ -255,26 +274,28 @@ class _EmailListScreenState extends State<EmailListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
           surfaceTintColor: Colors.transparent,
           titleSpacing: 16,
           title: Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
                 'WardMail',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF202124),
+                  color: onSurface,
                 ),
               ),
-              SizedBox(width: 6),
-              DecoratedBox(
+              const SizedBox(width: 6),
+              const DecoratedBox(
                 decoration: BoxDecoration(
                   color: Color(0xFF1877F2),
                   shape: BoxShape.circle,
@@ -291,9 +312,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
             ],
           ),
           bottom: TabBar(
-            indicatorColor: const Color(0xFF4285F4),
-            labelColor: const Color(0xFF4285F4),
-            unselectedLabelColor: Colors.grey,
+            indicatorColor: colorScheme.primary,
+            labelColor: colorScheme.primary,
+            unselectedLabelColor: onSurface.withOpacity(0.6),
             onTap: changeFolderByTabIndex,
             tabs: const [
               Tab(text: 'Hộp thư đến'),
@@ -842,7 +863,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
         ),
@@ -879,6 +900,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Widget _buildEmailItem(EmailMessage email) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     // Kiểm tra email đã được scan chưa
     final scanResult = _scanResults[email.id];
     
@@ -897,27 +921,35 @@ class _EmailListScreenState extends State<EmailListScreen> {
       if (riskScorePercent < 26) {
         // AN TOÀN - Xanh lá
         borderColor = const Color(0xFF34A853);
-        bgColor = const Color(0xFFE8F5E9);
+        if (!isDark) {
+          bgColor = const Color(0xFFE8F5E9);
+        }
         statusIcon = Icons.check_circle;
       } else if (riskScorePercent < 51) {
         // NGHI NGỜ - Vàng
         borderColor = const Color(0xFFFBBC04);
-        bgColor = const Color(0xFFFFFAE6);
+        if (!isDark) {
+          bgColor = const Color(0xFFFFFAE6);
+        }
         statusIcon = Icons.warning_amber;
       } else {
         // NGUY HIỂM - Đỏ
         borderColor = const Color(0xFFEA4335);
-        bgColor = const Color(0xFFFEF3F2);
+        if (!isDark) {
+          bgColor = const Color(0xFFFEF3F2);
+        }
         statusIcon = Icons.dangerous;
       }
     }
+
+    final baseAvatarColor = _avatarColorFor(email.from);
     
     final bool isSelected = _selectedEmailIds.contains(email.id);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: bgColor ?? Colors.white,
+        color: bgColor ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: borderColor != null 
             ? Border.all(color: borderColor, width: 2)
@@ -945,37 +977,11 @@ class _EmailListScreenState extends State<EmailListScreen> {
                   });
                 },
               )
-            : Stack(
-                children: [
-                  CircleAvatar(
-                    backgroundColor:
-                        borderColor?.withValues(alpha: 0.15) ?? const Color(0xFFE8F0FE),
-                    child: Text(
-                      email.from.isNotEmpty ? email.from[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        color: borderColor ?? const Color(0xFF4285F4),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (statusIcon != null)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          statusIcon,
-                          size: 14,
-                          color: borderColor,
-                        ),
-                      ),
-                    ),
-                ],
+            : _SenderAvatar(
+                email: email,
+                borderColor: borderColor,
+                baseAvatarColor: baseAvatarColor,
+                statusIcon: statusIcon,
               ),
       title: Text(
         email.subject,
@@ -1090,6 +1096,8 @@ class _EmailListScreenState extends State<EmailListScreen> {
     String riskLabel = 'Chưa có đánh giá';
     Color riskColor = Colors.grey;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (scanResult != null) {
       if (scanResult.isPhishing) {
         riskLabel = 'NGUY HIỂM';
@@ -1160,8 +1168,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: riskColor.withValues(alpha: 0.1),
+                        color: isDark ? Colors.transparent : riskColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: riskColor),
                       ),
                       child: Text(
                         riskLabel,
@@ -1247,3 +1256,68 @@ class _EmailListScreenState extends State<EmailListScreen> {
     return 'Đã xảy ra lỗi khi tải email. Vui lòng thử lại sau.\nChi tiết: $msg';
   }
 }
+
+class _SenderAvatar extends StatefulWidget {
+  final EmailMessage email;
+  final Color? borderColor;
+  final Color baseAvatarColor;
+  final IconData? statusIcon;
+
+  const _SenderAvatar({
+    required this.email,
+    required this.borderColor,
+    required this.baseAvatarColor,
+    required this.statusIcon,
+  });
+
+  @override
+  State<_SenderAvatar> createState() => _SenderAvatarState();
+}
+
+class _SenderAvatarState extends State<_SenderAvatar> {
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = widget.borderColor;
+    final baseColor = widget.baseAvatarColor;
+    final statusIcon = widget.statusIcon;
+
+    final backgroundColor =
+        borderColor?.withValues(alpha: 0.16) ?? baseColor.withValues(alpha: 0.16);
+
+    final avatar = CircleAvatar(
+      backgroundColor: backgroundColor,
+      child: Text(
+        widget.email.from.isNotEmpty
+            ? widget.email.from[0].toUpperCase()
+            : '?',
+        style: TextStyle(
+          color: borderColor ?? baseColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+    return Stack(
+      children: [
+        avatar,
+        if (statusIcon != null)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                statusIcon,
+                size: 14,
+                color: borderColor,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+

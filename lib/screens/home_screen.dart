@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../services/email_monitor_service.dart';
 import '../services/background_email_service.dart';
 import '../services/auto_analysis_settings_service.dart';
+import '../services/theme_service.dart';
 import '../widgets/guardmail_logo.dart';
 import 'email_list_screen.dart';
 import 'notification_screen.dart';
@@ -267,14 +268,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Tuỳ chỉnh bảo mật và cách WardMail phân tích email cho bạn.',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[700],
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 20),
                 if (_biometricAvailable) ...[
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -295,7 +296,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Xác thực vân tay',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF202124),
                         ),
                       ),
                       subtitle: Text(
@@ -317,7 +317,44 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.brightness_6_rounded,
+                            color: Color(0xFF5F6368)),
+                        title: const Text(
+                          'Giao diện sáng/tối',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Chọn chế độ hiển thị phù hợp với bạn',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      _ThemeModeTile(mode: ThemeMode.system, label: 'Theo hệ thống'),
+                      _ThemeModeTile(mode: ThemeMode.light, label: 'Nền sáng'),
+                      _ThemeModeTile(mode: ThemeMode.dark, label: 'Nền tối'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
@@ -338,7 +375,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Tự động phân tích email mới',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF202124),
                       ),
                     ),
                     subtitle: Text(
@@ -397,9 +433,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 0,
         title: Padding(
@@ -407,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Container(
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F3F4),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
             ),
             child: TextField(
@@ -546,7 +581,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.4,
-                        color: Colors.grey[700],
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                       ),
                     ),
                   ),
@@ -604,7 +639,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Bảo mật',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF202124),
                       ),
                     ),
                     shape: RoundedRectangleBorder(
@@ -621,7 +655,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Giới thiệu',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF202124),
                       ),
                     ),
                     onTap: () {
@@ -635,7 +668,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Trợ giúp',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF202124),
                       ),
                     ),
                     onTap: () {
@@ -695,7 +727,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.grey[700],
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     height: 1.4,
                   ),
                 ),
@@ -704,11 +736,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.5 : 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -880,7 +912,7 @@ class _IntroBullet extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey[700],
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                   height: 1.4,
                 ),
               ),
@@ -907,7 +939,7 @@ class _HelpSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -932,7 +964,7 @@ class _HelpSection extends StatelessWidget {
             content,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey[700],
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
               height: 1.4,
             ),
           ),
@@ -941,4 +973,50 @@ class _HelpSection extends StatelessWidget {
     );
   }
 
+}
+
+class _ThemeModeTile extends StatelessWidget {
+  final ThemeMode mode;
+  final String label;
+
+  const _ThemeModeTile({required this.mode, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final current = ThemeService().themeMode.value;
+
+    IconData icon;
+    switch (mode) {
+      case ThemeMode.light:
+        icon = Icons.light_mode;
+        break;
+      case ThemeMode.dark:
+        icon = Icons.dark_mode;
+        break;
+      case ThemeMode.system:
+      default:
+        icon = Icons.settings_suggest;
+        break;
+    }
+
+    return RadioListTile<ThemeMode>(
+      value: mode,
+      groupValue: current,
+      onChanged: (value) async {
+        if (value == null) return;
+        await ThemeService().setThemeMode(value);
+      },
+      dense: true,
+      title: Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF5F6368)),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
 }

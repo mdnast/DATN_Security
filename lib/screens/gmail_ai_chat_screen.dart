@@ -105,28 +105,29 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
+        title: Text(
           'Chat AI Gmail',
           style: TextStyle(
-            color: Color(0xFF202124),
+            color: onSurface,
             fontWeight: FontWeight.w600,
           ),
         ),
         iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
         elevation: 0,
       ),
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Container(
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -136,10 +137,13 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
                 ),
               ],
             ),
-            child: const Text(
+            child: Text(
               'Chatbot này dùng để hỏi chung về Gmail: cách sử dụng, quản lý hộp thư, bảo mật tài khoản, '
               'nhận diện spam/phishing nói chung... Nếu muốn phân tích một email cụ thể, hãy dùng AI trong màn chi tiết email.',
-              style: TextStyle(fontSize: 14, color: Color(0xFF202124)),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
             ),
           ),
           const Divider(height: 1),
@@ -167,7 +171,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
                           ? const Color(0xFF4285F4)
                           : (msg.isError
                               ? Colors.red[50]
-                              : Colors.white),
+                              : Theme.of(context).colorScheme.surface),
                       borderRadius: BorderRadius.circular(12).copyWith(
                         bottomLeft: msg.isUser
                             ? const Radius.circular(12)
@@ -191,7 +195,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
                             ? Colors.white
                             : (msg.isError
                                 ? Colors.red[900]
-                                : const Color(0xFF202124)),
+                                : onSurface),
                         fontSize: 14,
                       ),
                     ),
@@ -214,7 +218,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
                       decoration: InputDecoration(
                         hintText: 'Hỏi AI về cách dùng Gmail, bảo mật, spam/phishing...',
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(color: Colors.grey[300]!),

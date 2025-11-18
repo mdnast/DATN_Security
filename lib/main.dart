@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'services/notification_service.dart';
 import 'services/background_email_service.dart';
 import 'services/auto_start_service.dart';
+import 'services/theme_service.dart';
 import 'screens/auth_wrapper.dart';
 import 'screens/google_login_screen.dart';
 import 'screens/home_screen.dart';
@@ -33,6 +34,9 @@ void main() async {
   // Sẽ tự động chạy ngay cả sau khi reboot device
   await AutoStartService.checkAndRestart();
 
+  // Load theme mode đã lưu
+  await ThemeService().loadTheme();
+
   runApp(const MyApp());
 }
 
@@ -41,52 +45,121 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey, // ✅ Set navigator key
-      title: 'Phát hiện Phishing',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4285F4), // Google Blue
-          primary: const Color(0xFF4285F4), // Google Blue
-          secondary: const Color(0xFFEA4335), // Google Red
-        ),
-        cardTheme: const CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const AuthWrapper(),
-        '/login': (context) => const GoogleLoginScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/email-register': (context) => const EmailRegisterScreen(),
-        '/email-login': (context) => const EmailLoginScreen(),
-        '/email-verification': (context) => const EmailVerificationScreen(),
-        '/biometric-lock': (context) => const BiometricLockScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService().themeMode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          navigatorKey: navigatorKey, // ✅ Set navigator key
+          title: 'Phát hiện Phishing',
+          debugShowCheckedModeBanner: false,
+          themeMode: mode,
+          theme: _buildLightTheme(),
+          darkTheme: _buildDarkTheme(),
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const AuthWrapper(),
+            '/login': (context) => const GoogleLoginScreen(),
+            '/home': (context) => const HomeScreen(),
+            '/email-register': (context) => const EmailRegisterScreen(),
+            '/email-login': (context) => const EmailLoginScreen(),
+            '/email-verification': (context) => const EmailVerificationScreen(),
+            '/biometric-lock': (context) => const BiometricLockScreen(),
+          },
+        );
       },
     );
   }
+}
+
+ThemeData _buildLightTheme() {
+  final base = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF4285F4),
+      primary: const Color(0xFF4285F4),
+      secondary: const Color(0xFFEA4335),
+      brightness: Brightness.light,
+    ),
+  );
+
+  return base.copyWith(
+    scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.white,
+      foregroundColor: Color(0xFF202124),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+    ),
+    cardTheme: const CardThemeData(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
+    ),
+  );
+}
+
+ThemeData _buildDarkTheme() {
+  final base = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: const ColorScheme.dark(
+      primary: Color(0xFF8AB4F8),
+      secondary: Color(0xFFEA4335),
+      surface: Color(0xFF121212),
+      background: Color(0xFF000000),
+    ),
+  );
+
+  return base.copyWith(
+    scaffoldBackgroundColor: Colors.black,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.black,
+      foregroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+    ),
+    cardTheme: const CardThemeData(
+      color: Color(0xFF121212),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+    ),
+    textTheme: Typography.whiteCupertino,
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      filled: true,
+      fillColor: const Color(0xFF121212),
+    ),
+  );
 }
 
 class MyHomePage extends StatefulWidget {
