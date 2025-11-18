@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../services/email_monitor_service.dart';
 import '../services/background_email_service.dart';
 import '../services/quick_email_checker.dart';
+import '../services/auto_analysis_settings_service.dart';
 import 'email_list_screen.dart';
 import 'notification_screen.dart';
 import 'statistics_screen.dart';
@@ -23,10 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final NotificationService _notificationService = NotificationService();
   final EmailMonitorService _emailMonitorService = EmailMonitorService();
   final QuickEmailChecker _quickChecker = QuickEmailChecker();
+  final AutoAnalysisSettingsService _autoAnalysisSettings = AutoAnalysisSettingsService();
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
   bool _biometricAvailable = false;
   bool _biometricEnabled = false;
+  bool _autoAnalysisEnabled = true;
   int _unreadNotificationCount = 0;
   bool _isChecking = false; // Track checking state
   bool _isDisposed = false; // ✅ Track dispose state
@@ -187,6 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final data = await _authService.getCurrentUser();
     final biometricAvailable = await _biometricService.isBiometricAvailable();
     final biometricEnabled = await _biometricService.isBiometricEnabled();
+    final autoAnalysisEnabled = await _autoAnalysisSettings.isAutoAnalysisEnabled();
     
     // ✅ Safety check: mounted và not disposed
     if (mounted && !_isDisposed) {
@@ -194,8 +198,31 @@ class _HomeScreenState extends State<HomeScreen> {
         _userData = data;
         _biometricAvailable = biometricAvailable;
         _biometricEnabled = biometricEnabled;
+        _autoAnalysisEnabled = autoAnalysisEnabled;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _toggleAutoAnalysis(bool value) async {
+    await _autoAnalysisSettings.setAutoAnalysisEnabled(value);
+
+    if (mounted && !_isDisposed) {
+      setState(() {
+        _autoAnalysisEnabled = value;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            value
+                ? 'Đã bật tự động phân tích email mới'
+                : 'Đã tắt tự động phân tích email mới',
+          ),
+          backgroundColor: value ? Colors.green : Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -326,143 +353,187 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSettingsBottomSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.settings, size: 28),
-                const SizedBox(width: 12),
-                const Text(
-                  'Cài đặt',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    const Icon(Icons.settings, size: 28),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Cài đặt',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                if (_biometricAvailable) ...[
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: SwitchListTile(
+                      secondary: Icon(
+                        Icons.fingerprint,
+                        color:
+                            _biometricEnabled ? Colors.deepPurple : Colors.grey,
+                        size: 28,
+                      ),
+                      title: const Text(
+                        'Xác thực vân tay',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        _biometricEnabled
+                            ? 'Bật bảo mật vân tay'
+                            : 'Tắt bảo mật vân tay',
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      ),
+                      value: _biometricEnabled,
+                      onChanged: (value) {
+                        _toggleBiometric(value);
+                        Navigator.pop(context);
+                      },
+                      activeColor: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SwitchListTile(
+                    secondary: Icon(
+                      Icons.auto_awesome,
+                      color:
+                          _autoAnalysisEnabled ? Colors.green[700] : Colors.grey,
+                      size: 28,
+                    ),
+                    title: const Text(
+                      'Tự động phân tích email mới',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      _autoAnalysisEnabled
+                          ? 'Email mới sẽ được AI phân tích ngầm và lưu thống kê'
+                          : 'Chỉ nhận thông báo email mới, không phân tích tự động',
+                      style:
+                          TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                    value: _autoAnalysisEnabled,
+                    onChanged: (value) {
+                      _toggleAutoAnalysis(value);
+                      Navigator.pop(context);
+                    },
+                    activeColor: Colors.green,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            if (_biometricAvailable) ...[
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: SwitchListTile(
-                  secondary: Icon(
-                    Icons.fingerprint,
-                    color: _biometricEnabled ? Colors.deepPurple : Colors.grey,
-                    size: 28,
+                const SizedBox(height: 16),
+                // Check Email Ngay button - WITH AI ANALYSIS
+                ListTile(
+                  leading: Icon(
+                    Icons.refresh,
+                    color: Colors.green[700],
                   ),
                   title: const Text(
-                    'Xác thực vân tay',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    'Check Email Ngay',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   subtitle: Text(
-                    _biometricEnabled
-                        ? 'Bật bảo mật vân tay'
-                        : 'Tắt bảo mật vân tay',
+                    'Tìm email mới và phân tích bằng AI',
                     style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
-                  value: _biometricEnabled,
-                  onChanged: (value) {
-                    _toggleBiometric(value);
+                  onTap: () async {
                     Navigator.pop(context);
+                    await _checkEmailsNow();
                   },
-                  activeColor: Colors.deepPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.green[100]!),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
-            // Check Email Ngay button - WITH AI ANALYSIS
-            ListTile(
-              leading: Icon(
-                Icons.refresh,
-                color: Colors.green[700],
-              ),
-              title: const Text(
-                'Check Email Ngay',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              subtitle: Text(
-                'Tìm email mới và phân tích bằng AI',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _checkEmailsNow();
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.green[100]!),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Test notification button
-            ListTile(
-              leading: Icon(
-                Icons.notifications_active,
-                color: Colors.blue[700],
-              ),
-              title: const Text(
-                'Test thông báo',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              subtitle: Text(
-                'Gửi thông báo thử nghiệm',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _emailMonitorService.testNotification();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã gửi thông báo test!'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
+                const SizedBox(height: 12),
+                // Test notification button
+                ListTile(
+                  leading: Icon(
+                    Icons.notifications_active,
+                    color: Colors.blue[700],
+                  ),
+                  title: const Text(
+                    'Test thông báo',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
                     ),
-                  );
-                }
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.blue[100]!),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Logout button
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                'Đăng xuất',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
+                  ),
+                  subtitle: Text(
+                    'Gửi thông báo thử nghiệm',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _emailMonitorService.testNotification();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã gửi thông báo test!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.blue[100]!),
+                  ),
                 ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _handleSignOut();
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.red[100]!),
-              ),
+                const SizedBox(height: 12),
+                // Logout button
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Đăng xuất',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleSignOut();
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.red[100]!),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
         ),
       ),
     );
@@ -726,144 +797,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4285F4), Color(0xFF34A853)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4285F4).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.shield,
-                size: 100,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              'Bảo vệ khỏi Email Phishing',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                'Phân tích nội dung email để phát hiện\ncác dấu hiệu lừa đảo và phishing',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF8E1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFBBC04), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFBBC04).withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBBC04),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.lightbulb, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Cách sử dụng',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFF57C00),
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Nhấn nút "Kiểm tra Email" để tải lên và phân tích email của bạn',
-                          style: TextStyle(
-                            color: Colors.grey[800],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFEA4335), Color(0xFFFBBC04)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFEA4335).withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const EmailListScreen()),
-            );
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.email_outlined, color: Colors.white),
-          label: const Text(
-            'Kiểm tra Email',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
+      body: const EmailListScreen(),
+      floatingActionButton: null,
     );
   }
 

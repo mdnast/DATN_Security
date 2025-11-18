@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:enough_mail/enough_mail.dart';
@@ -5,13 +6,17 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' show Client, BaseClient, BaseRequest, StreamedResponse;
 import '../models/email_message.dart';
 import 'auth_service.dart';
+import '../models/email_attachment.dart';
 
 class GmailService {
   final AuthService _authService = AuthService();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   
   // Gmail API - For Google Sign-In users
-  Future<List<EmailMessage>> fetchEmailsViaGmailApi({int maxResults = 20}) async {
+  Future<List<EmailMessage>> fetchEmailsViaGmailApi({
+    int maxResults = 20,
+    String folder = 'inbox', // inbox, sent, trash
+  }) async {
     try {
       final accessToken = await _authService.getGoogleAccessToken();
       if (accessToken == null) {
@@ -22,7 +27,11 @@ class GmailService {
       final credentials = AccessCredentials(
         AccessToken('Bearer', accessToken, DateTime.now().toUtc().add(const Duration(hours: 1))),
         null,
-        ['https://www.googleapis.com/auth/gmail.readonly'],
+        [
+          'https://www.googleapis.com/auth/gmail.readonly',
+          'https://www.googleapis.com/auth/gmail.modify',
+          'https://www.googleapis.com/auth/gmail.send',
+        ],
       );
 
       final client = authenticatedClient(
@@ -31,12 +40,24 @@ class GmailService {
       );
 
       final gmailApi = gmail.GmailApi(client);
-      
+
+      List<String> labelIds;
+      switch (folder) {
+        case 'sent':
+          labelIds = ['SENT'];
+          break;
+        case 'trash':
+          labelIds = ['TRASH'];
+          break;
+        default:
+          labelIds = ['INBOX'];
+      }
+
       // Get message list
       final messageList = await gmailApi.users.messages.list(
         'me',
         maxResults: maxResults,
-        q: 'in:inbox',
+        labelIds: labelIds,
       );
 
       final List<EmailMessage> emails = [];
@@ -73,6 +94,126 @@ class GmailService {
     }
   }
 
+  Future<void> sendEmail({
+    required String to,
+    required String subject,
+    required String body,
+    List<EmailAttachment>? attachments,
+  }) async {
+    final accessToken = await _authService.getGoogleAccessToken();
+    if (accessToken == null) {
+      throw Exception('No access token available');
+    }
+
+    final credentials = AccessCredentials(
+      AccessToken('Bearer', accessToken, DateTime.now().toUtc().add(const Duration(hours: 1))),
+      null,
+      ['https://www.googleapis.com/auth/gmail.send'],
+    );
+
+    final client = authenticatedClient(
+      _GoogleAuthClient(accessToken),
+      credentials,
+    );
+
+    final gmailApi = gmail.GmailApi(client);
+
+    final messageBuffer = StringBuffer();
+
+    if (attachments != null && attachments.isNotEmpty) {
+      final boundary = 'guardmail_${DateTime.now().millisecondsSinceEpoch}';
+
+      messageBuffer
+        ..writeln('To: $to')
+        ..writeln('Subject: $subject')
+        ..writeln('MIME-Version: 1.0')
+        ..writeln('Content-Type: multipart/mixed; boundary="$boundary"')
+        ..writeln()
+        ..writeln('--$boundary')
+        ..writeln('Content-Type: text/plain; charset="utf-8"')
+        ..writeln('Content-Transfer-Encoding: base64')
+        ..writeln()
+        ..writeln(base64.encode(utf8.encode(body)));
+
+      for (final attachment in attachments) {
+        final encodedData = base64.encode(attachment.data);
+        messageBuffer
+          ..writeln('--$boundary')
+          ..writeln('Content-Type: ${attachment.mimeType}; name="${attachment.fileName}"')
+          ..writeln('Content-Disposition: attachment; filename="${attachment.fileName}"')
+          ..writeln('Content-Transfer-Encoding: base64')
+          ..writeln()
+          ..writeln(encodedData);
+      }
+
+      messageBuffer
+        ..writeln('--$boundary--');
+    } else {
+      messageBuffer
+        ..writeln('To: $to')
+        ..writeln('Subject: $subject')
+        ..writeln('Content-Type: text/plain; charset="utf-8"')
+        ..writeln()
+        ..writeln(body);
+    }
+
+    final bytes = utf8.encode(messageBuffer.toString());
+    final base64Email = base64UrlEncode(bytes).replaceAll('=', '');
+
+    final message = gmail.Message()
+      ..raw = base64Email;
+
+    await gmailApi.users.messages.send(message, 'me');
+
+    client.close();
+  }
+
+  Future<void> moveToTrash(String messageId) async {
+    final accessToken = await _authService.getGoogleAccessToken();
+    if (accessToken == null) {
+      throw Exception('No access token available');
+    }
+
+    final credentials = AccessCredentials(
+      AccessToken('Bearer', accessToken, DateTime.now().toUtc().add(const Duration(hours: 1))),
+      null,
+      ['https://www.googleapis.com/auth/gmail.modify'],
+    );
+
+    final client = authenticatedClient(
+      _GoogleAuthClient(accessToken),
+      credentials,
+    );
+
+    final gmailApi = gmail.GmailApi(client);
+    await gmailApi.users.messages.trash('me', messageId);
+
+    client.close();
+  }
+
+  Future<void> restoreFromTrash(String messageId) async {
+    final accessToken = await _authService.getGoogleAccessToken();
+    if (accessToken == null) {
+      throw Exception('No access token available');
+    }
+
+    final credentials = AccessCredentials(
+      AccessToken('Bearer', accessToken, DateTime.now().toUtc().add(const Duration(hours: 1))),
+      null,
+      ['https://www.googleapis.com/auth/gmail.modify'],
+    );
+
+    final client = authenticatedClient(
+      _GoogleAuthClient(accessToken),
+      credentials,
+    );
+
+    final gmailApi = gmail.GmailApi(client);
+    await gmailApi.users.messages.untrash('me', messageId);
+
+    client.close();
+  }
+
   EmailMessage? _parseGmailMessage(gmail.Message message) {
     try {
       final headers = message.payload?.headers ?? [];
@@ -82,9 +223,9 @@ class GmailService {
       
       for (var header in headers) {
         if (header.name == 'From') {
-          from = header.value ?? '';
+          from = _decodeMimeHeader(header.value);
         } else if (header.name == 'Subject') {
-          subject = header.value ?? '';
+          subject = _decodeMimeHeader(header.value);
         }
       }
 
@@ -115,8 +256,51 @@ class GmailService {
     }
   }
 
+  String _decodeMimeHeader(String? value) {
+    if (value == null || value.isEmpty) return '';
+
+    final encodedWordRegex = RegExp(r'=\?([^?]+)\?(B|Q)\?([^?]+)\?=', caseSensitive: false);
+
+    return value.replaceAllMapped(encodedWordRegex, (match) {
+      final encoding = match.group(2)?.toUpperCase();
+      final encodedText = match.group(3) ?? '';
+
+      try {
+        if (encoding == 'B') {
+          final bytes = base64.decode(encodedText);
+          return utf8.decode(bytes);
+        } else if (encoding == 'Q') {
+          // Quoted-printable (RFC 2047 variant)
+          var text = encodedText.replaceAll('_', ' ');
+          final buffer = StringBuffer();
+          for (int i = 0; i < text.length; i++) {
+            final char = text[i];
+            if (char == '=' && i + 2 < text.length) {
+              final hex = text.substring(i + 1, i + 3);
+              final codeUnit = int.tryParse(hex, radix: 16);
+              if (codeUnit != null) {
+                buffer.writeCharCode(codeUnit);
+                i += 2;
+                continue;
+              }
+            }
+            buffer.write(char);
+          }
+          return buffer.toString();
+        }
+      } catch (_) {
+        // Fallback to raw value if decode fails
+      }
+
+      return match.group(0) ?? '';
+    });
+  }
+
   // IMAP - For Email/Password users
-  Future<List<EmailMessage>> fetchEmailsViaImap({int maxResults = 20}) async {
+  Future<List<EmailMessage>> fetchEmailsViaImap({
+    int maxResults = 20,
+    String folder = 'inbox', // inbox, sent, trash
+  }) async {
     try {
       final email = await _getStoredEmail();
       final appPassword = await _getStoredAppPassword();
@@ -129,6 +313,7 @@ class GmailService {
       
       await client.connectToServer('imap.gmail.com', 993, isSecure: true);
       await client.login(email, appPassword);
+      // Hiện tại: luôn đọc INBOX cho tài khoản IMAP
       await client.selectInbox();
 
       final fetchResult = await client.fetchRecentMessages(
@@ -196,13 +381,16 @@ class GmailService {
   }
 
   // Unified method - automatically chooses the right method
-  Future<List<EmailMessage>> fetchEmails({int maxResults = 20}) async {
+  Future<List<EmailMessage>> fetchEmails({
+    int maxResults = 20,
+    String folder = 'inbox',
+  }) async {
     final loginMethod = await _authService.getLoginMethod();
     
     if (loginMethod == 'google') {
-      return await fetchEmailsViaGmailApi(maxResults: maxResults);
+      return await fetchEmailsViaGmailApi(maxResults: maxResults, folder: folder);
     } else {
-      return await fetchEmailsViaImap(maxResults: maxResults);
+      return await fetchEmailsViaImap(maxResults: maxResults, folder: folder);
     }
   }
 }

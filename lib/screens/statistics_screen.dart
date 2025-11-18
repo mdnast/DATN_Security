@@ -172,52 +172,66 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildOverviewCards(int total, int phishing, int suspicious, int safe) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Tổng quan',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 12) / 2;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatCard(
-              'Tổng số',
-              total.toString(),
-              Icons.email_outlined,
-              const Color(0xFF4285F4),
+            const Text(
+              'Tổng quan',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            _buildStatCard(
-              'Nguy hiểm',
-              phishing.toString(),
-              Icons.warning_amber_rounded,
-              const Color(0xFFEA4335),
-            ),
-            _buildStatCard(
-              'Nghi ngờ',
-              suspicious.toString(),
-              Icons.help_outline,
-              const Color(0xFFFBBC04),
-            ),
-            _buildStatCard(
-              'An toàn',
-              safe.toString(),
-              Icons.check_circle_outline,
-              const Color(0xFF34A853),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: itemWidth,
+                  child: _buildStatCard(
+                    'Tổng số',
+                    total.toString(),
+                    Icons.email_outlined,
+                    const Color(0xFF4285F4),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _buildStatCard(
+                    'Nguy hiểm',
+                    phishing.toString(),
+                    Icons.warning_amber_rounded,
+                    const Color(0xFFEA4335),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _buildStatCard(
+                    'Nghi ngờ',
+                    suspicious.toString(),
+                    Icons.help_outline,
+                    const Color(0xFFFBBC04),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _buildStatCard(
+                    'An toàn',
+                    safe.toString(),
+                    Icons.check_circle_outline,
+                    const Color(0xFF34A853),
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 

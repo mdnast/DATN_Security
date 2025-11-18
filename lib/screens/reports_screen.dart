@@ -273,6 +273,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   List<ScanResult> _getScansForRange() {
+    if (_allScans.isEmpty) {
+      return [];
+    }
+
     if (_selectedRange == 'all') {
       return _allScans;
     }
@@ -280,9 +284,15 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     final days = int.tryParse(_selectedRange) ?? 7;
     final now = DateTime.now();
 
-    return _allScans
+    final filtered = _allScans
         .where((scan) => now.difference(scan.scanDate).inDays <= days)
         .toList();
+
+    if (filtered.isEmpty) {
+      return _allScans;
+    }
+
+    return filtered;
   }
 
   Widget _buildTimelineChart(List<ScanResult> scans) {
@@ -302,6 +312,15 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         dailyData[dateKey]!['safe'] = (dailyData[dateKey]!['safe'] ?? 0) + 1;
       }
     }
+
+    final sortedEntries = dailyData.entries.toList()
+      ..sort((a, b) {
+        final aDate = DateFormat('dd/MM').parse(a.key);
+        final bDate = DateFormat('dd/MM').parse(b.key);
+        return aDate.compareTo(bDate);
+      });
+
+    final labels = sortedEntries.map((e) => e.key).toList();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -354,12 +373,11 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              final keys = dailyData.keys.toList();
-                              if (value.toInt() >= 0 && value.toInt() < keys.length) {
+                              if (value.toInt() >= 0 && value.toInt() < labels.length) {
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Text(
-                                    keys[value.toInt()],
+                                    labels[value.toInt()],
                                     style: const TextStyle(fontSize: 10),
                                   ),
                                 );
@@ -372,30 +390,39 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
-                          spots: dailyData.entries
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((e) => FlSpot(
-                                    e.key.toDouble(),
-                                    (e.value.value['phishing'] ?? 0).toDouble(),
-                                  ))
-                              .toList(),
+                          spots: List.generate(sortedEntries.length, (index) {
+                            final data = sortedEntries[index].value;
+                            return FlSpot(
+                              index.toDouble(),
+                              (data['phishing'] ?? 0).toDouble(),
+                            );
+                          }),
                           isCurved: true,
                           color: const Color(0xFFEA4335),
                           barWidth: 3,
                           dotData: const FlDotData(show: true),
                         ),
                         LineChartBarData(
-                          spots: dailyData.entries
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((e) => FlSpot(
-                                    e.key.toDouble(),
-                                    (e.value.value['safe'] ?? 0).toDouble(),
-                                  ))
-                              .toList(),
+                          spots: List.generate(sortedEntries.length, (index) {
+                            final data = sortedEntries[index].value;
+                            return FlSpot(
+                              index.toDouble(),
+                              (data['suspicious'] ?? 0).toDouble(),
+                            );
+                          }),
+                          isCurved: true,
+                          color: const Color(0xFFFBBC04),
+                          barWidth: 3,
+                          dotData: const FlDotData(show: true),
+                        ),
+                        LineChartBarData(
+                          spots: List.generate(sortedEntries.length, (index) {
+                            final data = sortedEntries[index].value;
+                            return FlSpot(
+                              index.toDouble(),
+                              (data['safe'] ?? 0).toDouble(),
+                            );
+                          }),
                           isCurved: true,
                           color: const Color(0xFF34A853),
                           barWidth: 3,
@@ -410,6 +437,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildChartLegend('Nguy hiểm', const Color(0xFFEA4335)),
+              const SizedBox(width: 24),
+              _buildChartLegend('Nghi ngờ', const Color(0xFFFBBC04)),
               const SizedBox(width: 24),
               _buildChartLegend('An toàn', const Color(0xFF34A853)),
             ],

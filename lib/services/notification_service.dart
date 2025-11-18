@@ -19,7 +19,9 @@ class NotificationService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   static const String _notificationsKey = 'notifications';
+  static const String _notifiedEmailIdsKey = 'notified_email_ids';
   List<NotificationModel> _notifications = [];
+  Set<String> _notifiedEmailIds = <String>{};
   
   // GlobalKey để navigate từ notification
   static GlobalKey<NavigatorState>? _navigatorKey;
@@ -33,6 +35,7 @@ class NotificationService {
     await _initializeLocalNotifications();
     await _initializeFirebaseMessaging();
     await _loadNotifications();
+    await _loadNotifiedEmailIds();
   }
 
   Future<void> _initializeLocalNotifications() async {
@@ -78,17 +81,12 @@ class NotificationService {
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    final notification = NotificationModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    showNotification(
       title: message.notification?.title ?? 'Thông báo',
       body: message.notification?.body ?? '',
       type: message.data['type'] ?? 'general',
-      timestamp: DateTime.now(),
       data: message.data,
     );
-
-    addNotification(notification);
-    _showLocalNotification(notification);
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {
@@ -197,7 +195,12 @@ class NotificationService {
   Future<void> _loadNotifications() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = prefs.getStringList(_notificationsKey) ?? [];
+      final String? userId = await _getCurrentUserId();
+      final String key = userId != null
+          ? '${_notificationsKey}_$userId'
+          : _notificationsKey;
+
+      final notificationsJson = prefs.getStringList(key) ?? [];
       
       _notifications = notificationsJson
           .map((json) => NotificationModel.fromJson(jsonDecode(json)))
@@ -210,14 +213,49 @@ class NotificationService {
     }
   }
 
+  Future<void> _loadNotifiedEmailIds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? userId = await _getCurrentUserId();
+      final String key = userId != null
+          ? '${_notifiedEmailIdsKey}_$userId'
+          : _notifiedEmailIdsKey;
+
+      final ids = prefs.getStringList(key) ?? [];
+      _notifiedEmailIds = ids.toSet();
+    } catch (e) {
+      print('Error loading notified email ids: $e');
+      _notifiedEmailIds = <String>{};
+    }
+  }
+
+  Future<void> _saveNotifiedEmailIds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? userId = await _getCurrentUserId();
+      final String key = userId != null
+          ? '${_notifiedEmailIdsKey}_$userId'
+          : _notifiedEmailIdsKey;
+
+      await prefs.setStringList(key, _notifiedEmailIds.toList());
+    } catch (e) {
+      print('Error saving notified email ids: $e');
+    }
+  }
+
   Future<void> _saveNotifications() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final notificationsJson = _notifications
           .map((notification) => jsonEncode(notification.toJson()))
           .toList();
-      
-      await prefs.setStringList(_notificationsKey, notificationsJson);
+
+      final String? userId = await _getCurrentUserId();
+      final String key = userId != null
+          ? '${_notificationsKey}_$userId'
+          : _notificationsKey;
+
+      await prefs.setStringList(key, notificationsJson);
     } catch (e) {
       print('Error saving notifications: $e');
     }
@@ -239,6 +277,21 @@ class NotificationService {
     required String type,
     Map<String, dynamic>? data,
   }) async {
+    // Nếu notification gắn với 1 email cụ thể, đảm bảo chỉ gửi 1 lần cho mỗi email_id
+    String? emailId;
+    if (data != null) {
+      final dynamic rawId = data['email_id'] ?? data['emailId'];
+      if (rawId is String && rawId.isNotEmpty) {
+        emailId = rawId;
+        if (_notifiedEmailIds.contains(emailId)) {
+          print('⏭️ Skip duplicate notification for email: $emailId');
+          return;
+        }
+        _notifiedEmailIds.add(emailId);
+        await _saveNotifiedEmailIds();
+      }
+    }
+
     final notification = NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
@@ -287,5 +340,25 @@ class NotificationService {
 
   Stream<List<NotificationModel>> get notificationsStream async* {
     yield _notifications;
+  }
+
+  /// Lấy userId hiện tại từ SharedPreferences (đã được AuthService lưu)
+  Future<String?> _getCurrentUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      if (userDataString == null) return null;
+
+      final Map<String, dynamic> userData =
+          jsonDecode(userDataString) as Map<String, dynamic>;
+      final dynamic uid = userData['uid'];
+
+      if (uid is String && uid.isNotEmpty) {
+        return uid;
+      }
+    } catch (e) {
+      print('Error getting current user id for notifications: $e');
+    }
+    return null;
   }
 }

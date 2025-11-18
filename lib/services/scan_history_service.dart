@@ -3,20 +3,50 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/scan_result.dart';
 
 class ScanHistoryService {
-  static const String _scanHistoryKey = 'scan_history';
+  static const String _legacyScanHistoryKey = 'scan_history';
+  static const String _scanHistoryKeyPrefix = 'scan_history_';
+
+  Future<String> _getStorageKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userDataString = prefs.getString('user_data');
+
+    if (userDataString != null) {
+      try {
+        final Map<String, dynamic> userData = jsonDecode(userDataString);
+        final String uid = (userData['uid'] ?? userData['email'] ?? 'guest').toString();
+        final key = '$_scanHistoryKeyPrefix$uid';
+
+        if (!prefs.containsKey(key) && prefs.containsKey(_legacyScanHistoryKey)) {
+          final legacyJson = prefs.getString(_legacyScanHistoryKey);
+          if (legacyJson != null) {
+            await prefs.setString(key, legacyJson);
+          }
+          await prefs.remove(_legacyScanHistoryKey);
+        }
+
+        return key;
+      } catch (_) {
+        // Fallback to legacy key if parsing fails
+      }
+    }
+
+    return _legacyScanHistoryKey;
+  }
 
   Future<void> saveScanResult(ScanResult result) async {
     final prefs = await SharedPreferences.getInstance();
+    final storageKey = await _getStorageKey();
     final history = await getScanHistory();
     history.add(result);
     
     final jsonList = history.map((r) => r.toJson()).toList();
-    await prefs.setString(_scanHistoryKey, jsonEncode(jsonList));
+    await prefs.setString(storageKey, jsonEncode(jsonList));
   }
 
   Future<List<ScanResult>> getScanHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(_scanHistoryKey);
+    final storageKey = await _getStorageKey();
+    final jsonString = prefs.getString(storageKey);
     
     if (jsonString == null) return [];
     
@@ -129,6 +159,7 @@ class ScanHistoryService {
 
   Future<void> clearHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_scanHistoryKey);
+    final storageKey = await _getStorageKey();
+    await prefs.remove(storageKey);
   }
 }

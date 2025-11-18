@@ -3,6 +3,7 @@ import 'email_analysis_service.dart';
 import 'notification_service.dart';
 import 'scan_history_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'auto_analysis_settings_service.dart';
 import '../models/email_message.dart';
 import 'dart:convert';
 
@@ -13,6 +14,7 @@ class QuickEmailChecker {
   final NotificationService _notificationService = NotificationService();
   final ScanHistoryService _scanHistoryService = ScanHistoryService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final AutoAnalysisSettingsService _autoAnalysisSettings = AutoAnalysisSettingsService();
 
   static const String _emailIdsKey = 'quick_check_email_ids';
 
@@ -94,6 +96,28 @@ class QuickEmailChecker {
     print('🔍 Analyzing: ${email.subject}');
     
     try {
+      final autoEnabled = await _autoAnalysisSettings.isAutoAnalysisEnabled();
+
+      if (!autoEnabled) {
+        print('ℹ️ Auto analysis disabled - sending new email notification only');
+        await _notificationService.showNotification(
+          title: '📧 Email mới',
+          body: 'Từ ${_extractSenderName(email.from)}: "${_truncate(email.subject, 60)}"',
+          type: 'new_email',
+          data: {
+            'email_id': email.id,
+            'from': email.from,
+            'subject': email.subject,
+            'snippet': email.snippet,
+            'body': email.body ?? '',
+            'date': email.date.toIso8601String(),
+            'action': 'open_email_detail',
+          },
+        );
+        await _saveEmailCache(email);
+        return;
+      }
+      
       // Nếu email đã được phân tích (và không phải unknown) thì bỏ qua để tiết kiệm token
       final latestScan = await _scanHistoryService.getLatestScanForEmail(email.id);
       if (latestScan != null && latestScan.result != 'unknown') {

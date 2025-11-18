@@ -81,15 +81,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
     while (attempt < maxRetries) {
       try {
         await _geminiService.testConnection();
-
-        final answer = await _geminiService.askQuestionAboutEmail(
-          subject: 'Hộp thư Gmail của tôi',
-          body:
-              'Danh sách email trong Gmail, không gửi nội dung cụ thể để bảo vệ riêng tư.',
-          from: 'gmail.com',
-          question: question,
-        );
-
+        final answer = await _geminiService.askGeneralGmailQuestion(question);
         return answer;
       } catch (e) {
         attempt++;
@@ -145,8 +137,8 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
               ],
             ),
             child: const Text(
-              'Bạn có thể hỏi AI về Gmail, cách nhận diện email lừa đảo, bảo mật tài khoản, '
-              'hoặc cách xử lý các email đáng ngờ.',
+              'Chatbot này dùng để hỏi chung về Gmail: cách sử dụng, quản lý hộp thư, bảo mật tài khoản, '
+              'nhận diện spam/phishing nói chung... Nếu muốn phân tích một email cụ thể, hãy dùng AI trong màn chi tiết email.',
               style: TextStyle(fontSize: 14, color: Color(0xFF202124)),
             ),
           ),
@@ -220,7 +212,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
                       maxLines: 4,
                       textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
-                        hintText: 'Hỏi AI về Gmail, bảo mật, phishing...',
+                        hintText: 'Hỏi AI về cách dùng Gmail, bảo mật, spam/phishing...',
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(

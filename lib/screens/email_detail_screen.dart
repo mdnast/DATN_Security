@@ -6,6 +6,7 @@ import '../services/email_analysis_service.dart';
 import '../services/scan_history_service.dart';
 import '../services/notification_service.dart';
 import 'email_ai_chat_screen.dart';
+import 'compose_email_screen.dart';
 
 class EmailDetailScreen extends StatefulWidget {
   final EmailMessage email;
@@ -121,6 +122,28 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Soạn email mới',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ComposeEmailScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.reply),
+            tooltip: 'Trả lời',
+            onPressed: _handleReply,
+          ),
+          IconButton(
+            icon: const Icon(Icons.forward),
+            tooltip: 'Chuyển tiếp',
+            onPressed: _handleForward,
+          ),
+          IconButton(
             icon: const Icon(Icons.auto_awesome),
             tooltip: 'Hỏi AI về email',
             onPressed: () {
@@ -145,6 +168,51 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       ),
       floatingActionButton: _buildAnalyzeFab(),
     );
+  }
+
+  void _handleReply() {
+    final quoted = _buildQuotedBody();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ComposeEmailScreen(
+          initialTo: widget.email.from,
+          initialSubject: widget.email.subject.startsWith('Re: ')
+              ? widget.email.subject
+              : 'Re: ${widget.email.subject}',
+          initialBody: '\n\n$quoted',
+        ),
+      ),
+    );
+  }
+
+  void _handleForward() {
+    final quoted = _buildQuotedBody();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ComposeEmailScreen(
+          initialSubject: widget.email.subject.startsWith('Fwd: ')
+              ? widget.email.subject
+              : 'Fwd: ${widget.email.subject}',
+          initialBody: '\n\n$quoted',
+        ),
+      ),
+    );
+  }
+
+  String _buildQuotedBody() {
+    final originalBody = widget.email.body ?? widget.email.snippet;
+    final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(widget.email.date);
+    final from = widget.email.from;
+    final subject = widget.email.subject;
+
+    final quotedLines = originalBody
+        .split('\n')
+        .map((line) => '> $line')
+        .join('\n');
+
+    return '---\nOn $dateStr, $from wrote:\nSubject: $subject\n\n$quotedLines';
   }
 
   Widget? _buildAnalyzeFab() {

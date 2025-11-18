@@ -6,6 +6,7 @@ import 'notification_service.dart';
 import 'email_analysis_service.dart';
 import 'scan_history_service.dart';
 import '../models/email_message.dart';
+import 'auto_analysis_settings_service.dart';
 
 /// Service theo dõi email mới và hiển thị thông báo
 class EmailMonitorService {
@@ -138,6 +139,13 @@ class EmailMonitorService {
     try {
       print('🔍 Silent analysis started for: ${email.subject}');
       
+      final autoSettings = AutoAnalysisSettingsService();
+      final autoEnabled = await autoSettings.isAutoAnalysisEnabled();
+      if (!autoEnabled) {
+        print('ℹ️ Auto analysis disabled - skipping silent analysis for ${email.subject}');
+        return;
+      }
+
       final analysisService = EmailAnalysisService();
       final scanHistoryService = ScanHistoryService();
       final storage = const FlutterSecureStorage();

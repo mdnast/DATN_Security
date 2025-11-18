@@ -25,6 +25,57 @@ class GeminiAnalysisService {
     );
   }
   
+  /// Trợ lý Gmail chung: trả lời câu hỏi về cách dùng Gmail, bảo mật, spam...
+  Future<String> askGeneralGmailQuestion(String question) async {
+    int maxRetries = _availableModels.length;
+    int attempt = 0;
+
+    while (attempt < maxRetries) {
+      try {
+        final chatModel = GenerativeModel(
+          model: _currentModel,
+          apiKey: _chatApiKey.isNotEmpty ? _chatApiKey : _apiKey,
+        );
+
+        final prompt = '''
+Bạn là trợ lý chuyên về Gmail.
+
+Nhiệm vụ của bạn:
+- Giải thích cách sử dụng Gmail, quản lý hộp thư, lọc spam, báo cáo phishing, bảo mật tài khoản.
+- Đưa ra hướng dẫn từng bước, dễ hiểu, phù hợp người dùng bình thường.
+- Có thể giải thích cách nhận diện email lừa đảo NÓI CHUNG, nhưng không cần nội dung email cụ thể.
+- KHÔNG bao giờ yêu cầu người dùng cung cấp mật khẩu, mã xác minh, OTP, mã bảo mật, link đăng nhập, hoặc thông tin thẻ/tài khoản.
+
+Câu hỏi của người dùng:
+"""
+$question
+"""
+
+Trả lời bằng tiếng Việt, rõ ràng, gọn gàng, tập trung vào hướng dẫn thực tế.
+''';
+
+        final response = await chatModel.generateContent([Content.text(prompt)]);
+        final text = response.text?.trim();
+
+        if (text == null || text.isEmpty) {
+          throw Exception('Không nhận được phản hồi từ Gemini AI');
+        }
+
+        return text;
+      } catch (e) {
+        if (attempt < maxRetries - 1) {
+          _switchToFallbackModel();
+          attempt++;
+          continue;
+        } else {
+          throw Exception('Lỗi khi hỏi trợ lý Gmail: $e');
+        }
+      }
+    }
+
+    throw Exception('Unexpected error in askGeneralGmailQuestion');
+  }
+  
   Future<String> askQuestionAboutEmail({
     required String subject,
     required String body,

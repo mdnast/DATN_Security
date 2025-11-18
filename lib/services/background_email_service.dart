@@ -6,6 +6,7 @@ import 'notification_service.dart';
 import 'scan_history_service.dart';
 import '../models/email_message.dart';
 import 'dart:convert';
+import 'auto_analysis_settings_service.dart';
 
 /// Background service để check email và phân tích ngay cả khi app đóng
 class BackgroundEmailService {
@@ -127,9 +128,39 @@ Future<void> _checkAndAnalyzeEmails() async {
 
     print('Found ${newEmails.length} new email(s)!');
 
-    // Phân tích từng email mới
-    for (var email in newEmails) {
-      await _analyzeAndNotify(email, analysisService, notificationService, scanHistoryService, storage);
+    final autoSettings = AutoAnalysisSettingsService();
+    final autoEnabled = await autoSettings.isAutoAnalysisEnabled();
+
+    if (!autoEnabled) {
+      print('ℹ️ Auto analysis disabled - sending new email notifications only');
+      for (var email in newEmails) {
+        await notificationService.showNotification(
+          title: '📧 Email mới',
+          body: 'Từ ${_extractSenderName(email.from)}: "${email.subject}"',
+          type: 'new_email',
+          data: {
+            'email_id': email.id,
+            'from': email.from,
+            'subject': email.subject,
+            'snippet': email.snippet,
+            'body': email.body ?? '',
+            'date': email.date.toIso8601String(),
+            'action': 'open_email_detail',
+          },
+        );
+        await _saveEmailCache(storage, email);
+      }
+    } else {
+      // Phân tích từng email mới
+      for (var email in newEmails) {
+        await _analyzeAndNotify(
+          email,
+          analysisService,
+          notificationService,
+          scanHistoryService,
+          storage,
+        );
+      }
     }
 
     // Cập nhật danh sách IDs với snapshot hiện tại

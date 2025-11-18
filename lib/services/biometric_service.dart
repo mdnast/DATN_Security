@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth/error_codes.dart' as auth_error;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,7 +6,8 @@ import 'package:flutter/services.dart';
 
 class BiometricService {
   final LocalAuthentication _localAuth = LocalAuthentication();
-  static const String _biometricEnabledKey = 'biometric_enabled';
+  static const String _legacyBiometricEnabledKey = 'biometric_enabled';
+  static const String _biometricEnabledKeyPrefix = 'biometric_enabled_';
   DateTime? _lastAuthTime;
   static const int _sessionTimeoutSeconds = 30;
 
@@ -86,12 +88,14 @@ class BiometricService {
 
   Future<bool> isBiometricEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_biometricEnabledKey) ?? false;
+    final storageKey = await _getStorageKey(prefs);
+    return prefs.getBool(storageKey) ?? false;
   }
 
   Future<void> setBiometricEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_biometricEnabledKey, enabled);
+    final storageKey = await _getStorageKey(prefs);
+    await prefs.setBool(storageKey, enabled);
   }
 
   Future<bool> toggleBiometric() async {
@@ -108,6 +112,32 @@ class BiometricService {
     if (_lastAuthTime == null) return false;
     final timeSinceAuth = DateTime.now().difference(_lastAuthTime!);
     return timeSinceAuth.inSeconds < _sessionTimeoutSeconds;
+  }
+
+  Future<String> _getStorageKey(SharedPreferences prefs) async {
+    final userDataString = prefs.getString('user_data');
+
+    if (userDataString != null) {
+      try {
+        final Map<String, dynamic> userData = jsonDecode(userDataString);
+        final String uid = (userData['uid'] ?? userData['email'] ?? 'guest').toString();
+        final key = '$_biometricEnabledKeyPrefix$uid';
+
+        if (!prefs.containsKey(key) && prefs.containsKey(_legacyBiometricEnabledKey)) {
+          final legacy = prefs.getBool(_legacyBiometricEnabledKey);
+          if (legacy != null) {
+            await prefs.setBool(key, legacy);
+          }
+          await prefs.remove(_legacyBiometricEnabledKey);
+        }
+
+        return key;
+      } catch (_) {
+        // Fallback to legacy key if parsing fails
+      }
+    }
+
+    return _legacyBiometricEnabledKey;
   }
 }
 
