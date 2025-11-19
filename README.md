@@ -1,91 +1,111 @@
-# Email Phishing Detection Application
+# WardMail – AI‑powered phishing email detection app
 
-A mobile application developed with Flutter to help users detect and protect against phishing emails. The app integrates multi-factor authentication and a user-friendly interface.
+WardMail is a Flutter mobile/desktop application that helps users detect and avoid phishing emails by combining multiple security layers (Firebase Authentication, biometric login, reCAPTCHA, AI‑based content analysis) with a clean and intuitive UI.
 
-## 🎯 Project Goals
+---
 
-Build an intelligent email security tool to help users:
-- Securely login with multiple authentication methods
-- Manage and read emails from various sources (Gmail, IMAP)
-- Detect dangerous phishing emails
-- Protect personal information from fraudulent attacks
+## 🎯 Project goals
 
-## ✨ Current Features
+- Provide **secure login** with multiple authentication methods.
+- **Read and manage emails** from Gmail and other IMAP mailboxes.
+- **Detect phishing emails** based on content, links, sender and other email features.
+- Offer **statistics, reports**, and **real‑time alerts** when suspicious activity is detected.
 
-### 🔐 Authentication & Security
-- **Google Sign-In**: Integrated Google Sign-In for quick login experience
-- **Email/Password Login**: Support registration and login via email with Firebase Authentication
-- **Email Verification**: Send verification email to ensure account validity
-- **Biometric Authentication**: Secure app with fingerprint/Face ID
-- **Session Management**: Securely store login information
+> Status: **Core features for the graduation thesis (DATN) have been completed.**
 
-### 📧 Email Management
-- **Gmail Integration**: Read emails from Gmail account via Gmail API
-- **IMAP Support**: Configure IMAP connection for other email providers
-- **Email List**: Display email list with intuitive interface
-- **Email Content Reader**: View detailed content and metadata of emails
+---
 
-### 🎨 User Interface
-- **Material Design 3**: Modern, user-friendly design
-- **Google Theme**: Uses Google's color scheme and design style
-- **Responsive**: Optimized for multiple screen sizes
-- **Drawer Navigation**: Easy-to-use navigation menu
-- **Bottom Sheet**: Quick settings with bottom sheet
+## ✨ Key features
 
-## 🚀 Upcoming Features
+### 1. 🔐 Authentication & security
+- Login with **Google Sign‑In**.
+- Register / login with **Email & Password** (Firebase Authentication + email verification).
+- **Biometric authentication** (fingerprint / Face ID) to lock/unlock the app.
+- **reCAPTCHA Enterprise** to protect login and registration forms from automated attacks.
+- Session management and secure token storage using `flutter_secure_storage`.
 
-### 🤖 AI-Powered Phishing Analysis
-- **Machine Learning Model**: Integrate AI model to detect phishing emails
-- **Content Analysis**: Evaluate email content, links, and attachments
-- **Scoring System**: Risk scoring system for email threats
-- **Smart Alerts**: Automatic notifications when dangerous emails are detected
-- **Analysis History**: Store analysis results for tracking
+### 2. 📧 Email management & reading
+- Integrates **Gmail API** to fetch and read emails from a Gmail account.
+- Supports **IMAP** via `enough_mail` for other mail providers.
+- Intuitive email list with basic categorization.
+- Detailed email view, including HTML content rendered via `webview_flutter`.
 
-### 📊 Statistics & Reports
-- **Dashboard**: Display statistics about scanned emails
-- **Detailed Reports**: Analyze trends and common phishing types
-- **Export Reports**: Generate PDF/CSV reports of scanned emails
+### 3. 🤖 AI‑based phishing detection
+- Uses **Google Generative AI (Gemini)** (`google_generative_ai`) to analyze email content.
+- Evaluates **subject, body, links, sender** to estimate phishing risk.
+- Assigns **risk levels** (safe / suspicious / dangerous) to each email.
+- Stores analysis history so users can review past results.
 
-### 🔔 Notifications
-- **Push Notification**: Alert immediately when suspicious emails are received
-- **Email Alert**: Send email notifications about threats
+### 4. 📊 Statistics & reports
+- **Dashboard** with an overview of scanned emails and distribution of safe/suspicious/dangerous messages.
+- Visual charts built with `fl_chart` to show trends and common attack types.
+- **Export reports** as **PDF** (`pdf`) and **CSV** (`csv`).
+- Share reports via email or other apps with `share_plus`.
 
-## 🛠️ Technologies Used
+### 5. 🔔 Notifications & background tasks
+- **Firebase Cloud Messaging** (`firebase_messaging`) for push notifications.
+- Local alerts using `flutter_local_notifications` when high‑risk emails are detected.
+- Periodic background jobs with `workmanager` (e.g., check new emails, refresh stats).
 
-### Framework & Language
-- **Flutter**: 3.9.2
-- **Dart**: SDK ^3.9.2
+### 6. 🎨 User interface
+- Built with **Material Design 3**, supports **multi‑language UI** (see `localization/`).
+- Optimized layouts for multiple screen sizes.
+- Reusable custom widgets stored in `widgets/`.
 
-### Backend & Authentication
-- **Firebase Core**: 3.8.1 - Backend platform
-- **Firebase Auth**: 5.3.3 - User authentication
-- **Google Sign-In**: 6.2.1 - Google login
+---
 
-### Email Services
-- **Gmail API**: googleapis 13.2.0, googleapis_auth 1.6.0
-- **IMAP Protocol**: enough_mail 2.1.7
+## 🛠 Tech stack & main packages
 
-### Security & Storage
-- **Local Auth**: 2.3.0 - Biometric authentication
-- **Flutter Secure Storage**: 9.2.2 - Secure storage
-- **Shared Preferences**: 2.2.2 - Settings storage
+### Language & framework
+- **Flutter** (project environment: `sdk: ^3.9.2`).
+- **Dart** 3.x.
 
-### Networking
-- **HTTP**: 1.2.0 - API requests
+### Auth & backend
+- `firebase_core`, `firebase_auth` – user authentication and session management.
+- `google_sign_in` – Google login.
+- `recaptcha_enterprise_flutter` – reCAPTCHA Enterprise integration.
 
-## 📋 System Requirements
+### Email & networking
+- `googleapis`, `googleapis_auth` – Gmail API integration.
+- `enough_mail` – IMAP client.
+- `http` – REST/HTTP requests.
+- `webview_flutter` – display HTML email content.
 
-- **Flutter SDK**: >= 3.9.2
-- **Android**: API level 21 (Android 5.0) or higher
-- **iOS**: iOS 12.0 or higher (if building for iOS)
-- **Windows**: Windows 10 or higher (if building for Windows)
+### AI & analysis
+- `google_generative_ai` – calls Gemini models to analyze email content.
 
-## 🔧 Installation and Running
+### Storage & security
+- `flutter_secure_storage` – secure token/credential storage.
+- `shared_preferences` – store user preferences and basic settings.
+- `local_auth` – biometric authentication.
 
-### 1. Clone repository
+### Notifications, background & utilities
+- `firebase_messaging` – push notifications.
+- `flutter_local_notifications` – local notifications.
+- `workmanager` – background tasks.
+- `pdf`, `csv`, `path_provider` – export and store reports.
+- `fl_chart` – data visualization.
+- `share_plus` – share files/reports.
+- `file_picker` – choose files when importing/exporting data.
+
+---
+
+## 📋 System requirements
+
+- **Flutter SDK**: `>= 3.9.2`.
+- **Android**: API level 21 (Android 5.0) or higher.
+- **Windows**: Windows 10 or higher (for desktop build).
+
+> iOS builds are possible with proper Xcode and certificate setup, but the main focus of this thesis is Android/Windows.
+
+---
+
+## 🔧 Setup & run
+
+### 1. Clone the repository
 ```bash
-git clone <repository-url>
-cd project
+
+cd DATN---GuardMail
 ```
 
 ### 2. Install dependencies
@@ -94,107 +114,76 @@ flutter pub get
 ```
 
 ### 3. Configure Firebase
-- Create a new project on [Firebase Console](https://console.firebase.google.com/)
-- Add Android/iOS app to Firebase project
-- Download configuration files:
-  - Android: `google-services.json` → `android/app/`
-  - iOS: `GoogleService-Info.plist` → `ios/Runner/`
-- Enable Firebase Authentication (Email/Password and Google Sign-In)
+- Create a project in [Firebase Console](https://console.firebase.google.com/).
+- Add an Android app (and Windows if needed).
+- Download config files:
+  - Android: `google-services.json` → `android/app/`.
+- Enable **Authentication** (Email/Password, Google) and **Cloud Messaging** if you use push notifications.
 
-### 4. Configure Google Sign-In
-- Create OAuth 2.0 credentials on [Google Cloud Console](https://console.cloud.google.com/)
-- Add SHA-1 fingerprint for Android:
-```bash
-cd android
-./gradlew signingReport
-```
+### 4. Configure Google Sign‑In, Gmail API & Generative AI
+- Create an OAuth 2.0 Client ID in [Google Cloud Console](https://console.cloud.google.com/).
+- Add your app SHA‑1/SHA‑256 fingerprints.
+- Enable required APIs (e.g. Gmail API, Generative Language API) and wire the keys into the app code.
 
-### 5. Run the application
+### 5. Run the app
 ```bash
-# Android
+# Android (device or emulator)
 flutter run
 
-# Windows (if available)
+# Windows
 flutter run -d windows
 ```
 
-## 📁 Project Structure
+---
 
-```
+## 📁 Main project structure
+
+```text
 lib/
-├── main.dart                          # Application entry point
-├── models/                            # Data models
-│   └── email_message.dart             # Email message model
-├── screens/                           # UI screens
-│   ├── auth_wrapper.dart              # Authentication state wrapper
-│   ├── google_login_screen.dart       # Google login screen
-│   ├── email_login_screen.dart        # Email login screen
-│   ├── email_register_screen.dart     # Registration screen
-│   ├── email_verification_screen.dart # Email verification screen
-│   ├── biometric_lock_screen.dart     # Biometric authentication screen
-│   ├── home_screen.dart               # Home screen
-│   ├── email_list_screen.dart         # Email list screen
-│   └── imap_setup_screen.dart         # IMAP configuration screen
-└── services/                          # Business logic & services
-    ├── auth_service.dart              # Authentication service
-    ├── biometric_service.dart         # Biometric service
-    └── gmail_service.dart             # Gmail API service
+├── main.dart        # App entry point
+├── img/             # Logos and images
+├── localization/    # Localization and translations
+├── models/          # Data models (email, user, analysis results, ...)
+├── screens/         # UI screens
+├── services/        # Business logic & API services (auth, Gmail, AI, ...)
+└── widgets/         # Reusable widgets
 ```
-
-## 🎓 Graduation Thesis Project
-
-This project is being developed as part of a Graduation Thesis (DATN).
-
-**Status**: In Development 🚧
-
-**Current Phase**:
-- ✅ Completed multi-factor authentication system
-- ✅ Completed email reading integration (Gmail & IMAP)
-- ✅ Completed basic user interface
-- 🔄 Currently researching and developing AI phishing analysis module
-- ⏳ Notification and reporting systems not yet implemented
-
-**Development Roadmap**:
-1. **Phase 2**: Integrate AI/ML model for phishing email analysis
-2. **Phase 3**: Build scoring and alert system
-3. **Phase 4**: Add statistics and reporting features
-4. **Phase 5**: Testing and performance optimization
-5. **Phase 6**: Complete documentation and demo
-
-## 🔒 Security
-
-The application is committed to protecting user information:
-- Passwords encrypted by Firebase Authentication
-- Authentication tokens securely stored with Flutter Secure Storage
-- Supports biometric authentication (fingerprint/Face ID)
-- Does not store email content on server
-- All connections use HTTPS/SSL
-
-## 📸 Screenshots
-
-_(Screenshots will be updated after UI completion)_
-
-## 🤝 Contributing
-
-This is a personal thesis project. All feedback and suggestions are welcome!
-
-## 📝 License
-
-This project is developed for educational and research purposes.
-
-## 👨‍💻 Author
-
-**Team 2**
-- Email: datlecong156@gmail.com
-
-
-## 📞 Contact
-
-If you have any questions or feedback, please contact via email or create an issue on the repository.
 
 ---
 
-**Note**: The application is in development. Some features may be incomplete or being improved.
+## 🔒 Security
+
+- Passwords are handled by **Firebase Authentication**.
+- Auth tokens are stored securely using **Secure Storage**, never as plain text.
+- **Biometric authentication** (fingerprint / Face ID) can be required to open the app.
+- The app does **not** upload email content to any custom server beyond Gmail/IMAP.
+- All network traffic uses HTTPS/SSL.
+
+---
+
+## 🎓 Graduation thesis information (DATN)
+
+- Topic: **Building the WardMail application to detect phishing emails using AI**.
+- Completed modules:
+  - Multi‑layer authentication (Firebase + Google + biometrics + reCAPTCHA).
+  - Email reading integration (Gmail API, IMAP).
+  - AI‑powered email analysis with Gemini and risk scoring.
+  - Statistics, reporting and export modules.
+  - Notifications and background processing.
+
+---
+
+## 👨‍💻 Author
+
+**Team 2**  
+Contact email: **datlecong156@gmail.com**
+
+---
+
+## 📞 Contact & feedback
+
+- For questions, suggestions or discussions about the project, please reach out via email.
+- You can also open an issue in this repository to report bugs or request new features.
 
 
 
