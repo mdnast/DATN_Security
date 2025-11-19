@@ -7,6 +7,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/notification_model.dart';
 import '../models/email_message.dart';
 import '../screens/email_detail_screen.dart';
+import 'locale_service.dart';
+import '../localization/app_localizations.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -81,8 +83,10 @@ class NotificationService {
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
+    final locale = LocaleService().locale.value ?? const Locale('vi');
+    final l = AppLocalizations(locale);
     showNotification(
-      title: message.notification?.title ?? 'Thông báo',
+      title: message.notification?.title ?? l.t('notifications_title'),
       body: message.notification?.body ?? '',
       type: message.data['type'] ?? 'general',
       data: message.data,
@@ -285,12 +289,17 @@ class NotificationService {
       final dynamic rawId = data['email_id'] ?? data['emailId'];
       if (rawId is String && rawId.isNotEmpty) {
         emailId = rawId;
-        if (_notifiedEmailIds.contains(emailId)) {
-          print('⏭️ Skip duplicate notification for email: $emailId');
-          return;
+        // Chỉ chống trùng thông báo cho loại 'new_email'.
+        // Các loại khác (phishing/safe/security) vẫn phải hiển thị
+        // ngay cả khi email đó đã có thông báo trước đó.
+        if (type == 'new_email') {
+          if (_notifiedEmailIds.contains(emailId)) {
+            print('⏭️ Skip duplicate NEW_EMAIL notification for: $emailId');
+            return;
+          }
+          _notifiedEmailIds.add(emailId);
+          await _saveNotifiedEmailIds();
         }
-        _notifiedEmailIds.add(emailId);
-        await _saveNotifiedEmailIds();
       }
     }
 
@@ -342,6 +351,13 @@ class NotificationService {
 
   Stream<List<NotificationModel>> get notificationsStream async* {
     yield _notifications;
+  }
+
+  /// Reload notifications and notified email IDs for the currently saved user
+  /// (used after login to ensure per-account history is loaded).
+  Future<void> reloadForCurrentUser() async {
+    await _loadNotifications();
+    await _loadNotifiedEmailIds();
   }
 
   /// Lấy userId hiện tại từ SharedPreferences (đã được AuthService lưu)

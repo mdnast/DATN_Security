@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/recaptcha_service.dart';
 import '../widgets/guardmail_logo.dart';
+import '../localization/app_localizations.dart';
 
 class EmailLoginScreen extends StatefulWidget {
   const EmailLoginScreen({super.key});
@@ -30,6 +31,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final l = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -43,8 +45,8 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
       if (_recaptchaToken == null || _recaptchaToken!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Không xác minh được reCAPTCHA, vui lòng thử lại'),
+            SnackBar(
+              content: Text(l.t('recaptcha_not_verified_snackbar')),
               backgroundColor: Colors.red,
             ),
           );
@@ -71,23 +73,25 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      String errorMsg = 'Đã xảy ra lỗi';
+      String errorMsg = l.t('error_generic');
       
       switch (e.code) {
         case 'user-not-found':
-          errorMsg = 'Không tìm thấy tài khoản';
+          errorMsg = l.t('error_user_not_found');
           break;
         case 'wrong-password':
-          errorMsg = 'Mật khẩu không đúng';
+          errorMsg = l.t('error_wrong_password');
           break;
         case 'invalid-email':
-          errorMsg = 'Email không hợp lệ';
+          errorMsg = l.t('error_invalid_email');
           break;
         case 'user-disabled':
-          errorMsg = 'Tài khoản đã bị vô hiệu hóa';
+          errorMsg = l.t('error_user_disabled');
           break;
         default:
-          errorMsg = 'Lỗi: ${e.message}';
+          errorMsg = l
+              .t('error_with_message')
+              .replaceFirst('{message}', e.message ?? '');
       }
 
       if (mounted) {
@@ -98,7 +102,9 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
     } catch (error) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Lỗi đăng nhập: ${error.toString()}';
+          _errorMessage = l
+              .t('login_error_with_message')
+              .replaceFirst('{message}', error.toString());
         });
       }
     } finally {
@@ -111,12 +117,13 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   }
 
   Future<void> _handleForgotPassword() async {
+    final l = AppLocalizations.of(context);
     final email = _emailController.text.trim();
     
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập email để đặt lại mật khẩu'),
+        SnackBar(
+          content: Text(l.t('forgot_password_enter_email')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -127,8 +134,8 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
       await _authService.sendPasswordResetEmail(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email đặt lại mật khẩu đã được gửi!'),
+          SnackBar(
+            content: Text(l.t('forgot_password_email_sent')),
             backgroundColor: Colors.green,
           ),
         );
@@ -137,7 +144,11 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${error.toString()}'),
+            content: Text(
+              l
+                  .t('error_with_message')
+                  .replaceFirst('{message}', error.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -147,13 +158,23 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final inputFillColor = isDark
+        ? theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface
+        : const Color(0xFFF8F9FA);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5F6368)),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: theme.appBarTheme.iconTheme?.color,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -178,11 +199,12 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Đăng nhập bằng email và mật khẩu',
+                    l.t('email_login_title'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: theme.textTheme.bodySmall?.color
+                          ?.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -191,9 +213,13 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                       padding: const EdgeInsets.all(12),
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: Colors.red[50],
+                        color: isDark
+                            ? Colors.red.withOpacity(0.15)
+                            : Colors.red[50],
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
+                        border: Border.all(
+                          color: isDark ? Colors.red[700]! : Colors.red[200]!,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -212,10 +238,13 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF5F6368)),
+                      labelText: l.t('email_field'),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: theme.iconTheme.color?.withOpacity(0.8),
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: inputFillColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -231,10 +260,10 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập email';
+                        return l.t('validation_enter_email');
                       }
                       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Email không hợp lệ';
+                        return l.t('validation_email_invalid');
                       }
                       return null;
                     },
@@ -244,12 +273,12 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Mật khẩu',
+                      labelText: l.t('password_field'),
                       prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: const Color(0xFF5F6368),
+                          color: theme.iconTheme.color?.withOpacity(0.8),
                         ),
                         onPressed: () {
                           setState(() {
@@ -258,7 +287,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                         },
                       ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: inputFillColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -274,7 +303,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
+                        return l.t('validation_enter_password');
                       }
                       return null;
                     },
@@ -284,9 +313,9 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _handleForgotPassword,
-                      child: const Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(
+                      child: Text(
+                        l.t('forgot_password'),
+                        style: const TextStyle(
                           color: Color(0xFF4285F4),
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -337,9 +366,9 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Đăng nhập',
-                              style: TextStyle(
+                          : Text(
+                              l.t('login_button'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -352,16 +381,19 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Chưa có tài khoản? ',
-                        style: TextStyle(color: Colors.grey[600]),
+                        l.t('no_account'),
+                        style: TextStyle(
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withOpacity(0.7),
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushReplacementNamed(context, '/email-register');
                         },
-                        child: const Text(
-                          'Đăng ký ngay',
-                          style: TextStyle(
+                        child: Text(
+                          l.t('register_now'),
+                          style: const TextStyle(
                             color: Color(0xFF4285F4),
                             fontWeight: FontWeight.w600,
                           ),

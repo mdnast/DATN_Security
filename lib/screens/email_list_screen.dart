@@ -6,6 +6,7 @@ import '../services/gmail_service.dart';
 import '../services/auth_service.dart';
 import '../services/scan_history_service.dart';
 import '../models/scan_result.dart';
+import '../localization/app_localizations.dart';
 import 'imap_setup_screen.dart';
 import 'email_detail_screen.dart';
 import 'gmail_ai_chat_screen.dart';
@@ -32,11 +33,11 @@ class _EmailListScreenState extends State<EmailListScreen> {
   bool _selectionMode = false;
   final Set<String> _selectedEmailIds = <String>{};
   String _searchQuery = '';
-  final List<String> _gmailSuggestedQuestions = const [
-    'Làm sao nhận diện email lừa đảo trong Gmail?',
-    'Khi nhận email đáng ngờ tôi nên làm gì?',
-    'Hướng dẫn bảo vệ tài khoản Gmail khỏi bị hack.',
-    'Giải thích cách báo cáo spam/phishing trong Gmail.',
+  final List<String> _gmailSuggestedQuestionKeys = const [
+    'gmail_ai_suggestion_1',
+    'gmail_ai_suggestion_2',
+    'gmail_ai_suggestion_3',
+    'gmail_ai_suggestion_4',
   ];
 
   static const String _emailCacheKeyPrefix = 'email_list_cache_';
@@ -274,6 +275,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
 
@@ -287,7 +289,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'WardMail',
+                l.t('app_title'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -316,51 +318,51 @@ class _EmailListScreenState extends State<EmailListScreen> {
             labelColor: colorScheme.primary,
             unselectedLabelColor: onSurface.withOpacity(0.6),
             onTap: changeFolderByTabIndex,
-            tabs: const [
-              Tab(text: 'Hộp thư đến'),
-              Tab(text: 'Đã gửi'),
-              Tab(text: 'Thùng rác'),
+            tabs: [
+              Tab(text: l.t('email_list_tab_inbox')),
+              Tab(text: l.t('email_list_tab_sent')),
+              Tab(text: l.t('email_list_tab_trash')),
             ],
           ),
           actions: [
             if (_selectedFolder == 'trash' && _selectionMode) ...[
               IconButton(
                 icon: const Icon(Icons.undo),
-                tooltip: 'Khôi phục email đã chọn',
+                tooltip: l.t('email_list_restore_selected'),
                 onPressed: _restoreSelectedEmails,
               ),
               IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Thoát chế độ chọn',
+                tooltip: l.t('email_list_exit_selection'),
                 onPressed: exitSelectionMode,
               ),
             ] else if (_selectedFolder == 'trash') ...[
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                tooltip: 'Chọn email trong Thùng rác',
+                tooltip: l.t('email_list_trash_select'),
                 onPressed: enterSelectionMode,
               ),
             ] else if (_selectedFolder == 'inbox' && _selectionMode) ...[
               IconButton(
                 icon: const Icon(Icons.delete),
-                tooltip: 'Xóa email đã chọn',
+                tooltip: l.t('email_list_delete_selected'),
                 onPressed: _deleteSelectedEmails,
               ),
               IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Thoát chế độ chọn',
+                tooltip: l.t('email_list_exit_selection'),
                 onPressed: exitSelectionMode,
               ),
             ] else if (_selectedFolder == 'inbox') ...[
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                tooltip: 'Chọn email trong Hộp thư đến',
+                tooltip: l.t('email_list_inbox_select'),
                 onPressed: enterSelectionMode,
               ),
             ],
             IconButton(
               icon: const Icon(Icons.auto_awesome),
-              tooltip: 'Chat AI Gmail',
+              tooltip: l.t('gmail_ai_chat_title'),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -493,6 +495,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Widget _buildSetupRequired() {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -521,18 +524,18 @@ class _EmailListScreenState extends State<EmailListScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Kết nối Gmail',
-              style: TextStyle(
+            Text(
+              l.t('email_list_setup_title'),
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Để đọc email từ Gmail, bạn cần cấu hình App Password',
+            Text(
+              l.t('email_list_setup_description'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
               ),
@@ -560,9 +563,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
                 icon: const Icon(Icons.settings, color: Colors.white),
-                label: const Text(
-                  'Cấu hình ngay',
-                  style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+                label: Text(
+                  l.t('email_list_setup_button'),
+                  style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -573,6 +576,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Widget _buildError() {
+    final l = AppLocalizations.of(context);
     final String displayMessage = _buildFriendlyErrorMessage();
 
     return Center(
@@ -587,9 +591,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
               color: Colors.red[300],
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Lỗi tải email',
-              style: TextStyle(
+            Text(
+              l.t('email_list_error_title'),
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -622,9 +626,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
                     backgroundColor: Colors.deepPurple,
                   ),
                   icon: const Icon(Icons.refresh, color: Colors.white),
-                  label: const Text(
-                    'Thử lại',
-                    style: TextStyle(color: Colors.white),
+                  label: Text(
+                    l.t('email_list_error_retry'),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
                 if (_loginMethod == 'email') ...[
@@ -632,7 +636,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
                   OutlinedButton.icon(
                     onPressed: _navigateToSetup,
                     icon: const Icon(Icons.settings),
-                    label: const Text('Cấu hình lại'),
+                    label: Text(l.t('email_list_error_reconfigure')),
                   ),
                 ],
               ],
@@ -644,6 +648,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Widget _buildEmpty() {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -654,9 +659,9 @@ class _EmailListScreenState extends State<EmailListScreen> {
             color: Colors.grey[300],
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Không có email',
-            style: TextStyle(
+          Text(
+            l.t('email_list_empty_title'),
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -669,6 +674,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
 
   Widget _buildEmailList() {
     final displayedEmails = _filteredEmails;
+    final l = AppLocalizations.of(context);
 
     return RefreshIndicator(
       onRefresh: _loadEmails,
@@ -707,16 +713,16 @@ class _EmailListScreenState extends State<EmailListScreen> {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Chuyển vào Thùng rác?'),
-                  content: const Text('Email sẽ được chuyển vào Thùng rác trong Gmail.'),
+                  title: Text(l.t('email_list_delete_confirm_title')),
+                  content: Text(l.t('email_list_delete_confirm_message')),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Hủy'),
+                      child: Text(l.t('common_cancel')),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Xóa'),
+                      child: Text(l.t('common_ok')),
                     ),
                   ],
                 ),
@@ -731,8 +737,10 @@ class _EmailListScreenState extends State<EmailListScreen> {
                       _filteredEmails.removeWhere((e) => e.id == email.id);
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã chuyển email vào Thùng rác'),
+                      SnackBar(
+                        content: Text(
+                          l.t('email_list_snackbar_moved_to_trash'),
+                        ),
                       ),
                     );
                   }
@@ -741,7 +749,11 @@ class _EmailListScreenState extends State<EmailListScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Lỗi xóa email: $e'),
+                        content: Text(
+                          l
+                              .t('email_list_snackbar_delete_error')
+                              .replaceFirst('{error}', e.toString()),
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -759,17 +771,19 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Future<void> _restoreSelectedEmails() async {
+    final l = AppLocalizations.of(context);
     if (_selectedEmailIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa chọn email nào để khôi phục')),
+        SnackBar(content: Text(l.t('email_list_snackbar_no_selected_restore'))),
       );
       return;
     }
 
     if (_loginMethod != 'google') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Khôi phục Thùng rác hiện chỉ hỗ trợ tài khoản Google'),
+        SnackBar(
+          content:
+              Text(l.t('email_list_snackbar_restore_google_only')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -790,14 +804,14 @@ class _EmailListScreenState extends State<EmailListScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã khôi phục email về Hộp thư đến')),
+          SnackBar(content: Text(l.t('email_list_snackbar_restored'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi khôi phục email: $e'),
+            content: Text('$e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -806,17 +820,19 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Future<void> _deleteSelectedEmails() async {
+    final l = AppLocalizations.of(context);
     if (_selectedEmailIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa chọn email nào để xóa')),
+        SnackBar(content: Text(l.t('email_list_snackbar_no_selected_delete'))),
       );
       return;
     }
 
     if (_loginMethod != 'google') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Xóa nhiều email chỉ hỗ trợ tài khoản Google'),
+        SnackBar(
+          content:
+              Text(l.t('email_list_snackbar_delete_google_only')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -837,14 +853,18 @@ class _EmailListScreenState extends State<EmailListScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã chuyển email vào Thùng rác')),
+          SnackBar(content: Text(l.t('email_list_snackbar_deleted'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi xóa email: $e'),
+            content: Text(
+              l
+                  .t('email_list_snackbar_delete_error')
+                  .replaceFirst('{error}', e.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -853,13 +873,14 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   Widget _buildGmailSuggestions() {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Text(
-            'Gợi ý hỏi AI về Gmail',
+            l.t('gmail_ai_suggestions_title'),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -872,10 +893,11 @@ class _EmailListScreenState extends State<EmailListScreen> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            itemCount: _gmailSuggestedQuestions.length,
+            itemCount: _gmailSuggestedQuestionKeys.length,
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
-              final q = _gmailSuggestedQuestions[index];
+              final key = _gmailSuggestedQuestionKeys[index];
+              final q = l.t(key);
               return ActionChip(
                 label: Text(
                   q,
@@ -902,6 +924,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
   Widget _buildEmailItem(EmailMessage email) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l = AppLocalizations.of(context);
 
     // Kiểm tra email đã được scan chưa
     final scanResult = _scanResults[email.id];
@@ -1031,7 +1054,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
               color: Colors.orange[700],
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
-              tooltip: 'Phân tích lại email',
+              tooltip: l.t('email_detail_reanalyze'),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -1091,6 +1114,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   void _showEmailPreview(EmailMessage email) {
+    final l = AppLocalizations.of(context);
     final scanResult = _scanResults[email.id];
 
     String riskLabel = 'Chưa có đánh giá';
@@ -1203,7 +1227,7 @@ class _EmailListScreenState extends State<EmailListScreen> {
                           ),
                         );
                       },
-                      child: const Text('Mở chi tiết'),
+                      child: Text(l.t('email_list_preview_open_detail')),
                     ),
                   ],
                 ),
@@ -1216,15 +1240,18 @@ class _EmailListScreenState extends State<EmailListScreen> {
   }
 
   String _formatDate(DateTime date) {
+    final l = AppLocalizations.of(context);
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {
       return '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
     } else if (difference.inDays == 1) {
-      return 'Hôm qua';
+      return l.t('email_list_date_yesterday');
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} ngày';
+      return l
+          .t('email_list_date_days_ago')
+          .replaceFirst('{days}', difference.inDays.toString());
     } else {
       return '${date.day}/${date.month}';
     }

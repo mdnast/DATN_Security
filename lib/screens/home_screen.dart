@@ -6,6 +6,8 @@ import '../services/email_monitor_service.dart';
 import '../services/background_email_service.dart';
 import '../services/auto_analysis_settings_service.dart';
 import '../services/theme_service.dart';
+import '../services/locale_service.dart';
+import '../localization/app_localizations.dart';
 import '../widgets/guardmail_logo.dart';
 import 'email_list_screen.dart';
 import 'notification_screen.dart';
@@ -92,9 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
       
       // Chỉ thông báo khi có lỗi
       if (mounted) {
+        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('⚠️ Lỗi khởi động monitoring: $e'),
+            content: Text(
+              l
+                  .t('monitoring_start_error')
+                  .replaceFirst('{error}', e.toString()),
+            ),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 3),
           ),
@@ -143,8 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Text(
             value
-                ? 'Đã bật tự động phân tích email mới'
-                : 'Đã tắt tự động phân tích email mới',
+                ? AppLocalizations.of(context)
+                    .t('auto_analysis_enabled_snackbar')
+                : AppLocalizations.of(context)
+                    .t('auto_analysis_disabled_snackbar'),
           ),
           backgroundColor: value ? Colors.green : Colors.orange,
           duration: const Duration(seconds: 2),
@@ -160,7 +169,10 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted && !_isDisposed) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result.errorMessage ?? 'Xác thực thất bại'),
+              content: Text(
+                result.errorMessage ??
+                    AppLocalizations.of(context).t('biometric_auth_failed'),
+              ),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 4),
             ),
@@ -182,8 +194,10 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Text(
             value
-                ? 'Đã bật xác thực vân tay'
-                : 'Đã tắt xác thực vân tay',
+                ? AppLocalizations.of(context)
+                    .t('biometric_enabled_snackbar')
+                : AppLocalizations.of(context)
+                    .t('biometric_disabled_snackbar'),
           ),
           backgroundColor: Colors.green,
         ),
@@ -192,19 +206,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleSignOut() async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+        title: Text(l.t('logout_confirm_title')),
+        content: Text(l.t('logout_confirm_message')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(l.t('common_cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Đăng xuất'),
+            child: Text(l.t('common_logout')),
           ),
         ],
       ),
@@ -221,6 +236,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSettingsBottomSheet() {
+    final l = AppLocalizations.of(context);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -249,12 +266,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   child: Row(
-                    children: const [
-                      Icon(Icons.settings, size: 26, color: Colors.white),
-                      SizedBox(width: 10),
+                    children: [
+                      const Icon(Icons.settings, size: 26, color: Colors.white),
+                      const SizedBox(width: 10),
                       Text(
-                        'Cài đặt WardMail',
-                        style: TextStyle(
+                        l.t('settings_title'),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -265,13 +282,56 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Tuỳ chỉnh bảo mật và cách WardMail phân tích email cho bạn.',
+                  l.t('settings_description'),
                   style: TextStyle(
                     fontSize: 13,
                     color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 20),
+                // Auto analysis first
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: SwitchListTile(
+                    secondary: Icon(
+                      Icons.auto_awesome,
+                      color:
+                          _autoAnalysisEnabled ? Colors.green[700] : Colors.grey,
+                      size: 28,
+                    ),
+                    title: Text(
+                      l.t('settings_auto_analysis_title'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _autoAnalysisEnabled
+                          ? l.t('settings_auto_analysis_on')
+                          : l.t('settings_auto_analysis_off'),
+                      style:
+                          TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                    value: _autoAnalysisEnabled,
+                    onChanged: (value) {
+                      _toggleAutoAnalysis(value);
+                      Navigator.pop(context);
+                    },
+                    activeColor: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Then biometric
                 if (_biometricAvailable) ...[
                   Container(
                     decoration: BoxDecoration(
@@ -292,16 +352,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             _biometricEnabled ? Colors.deepPurple : Colors.grey,
                         size: 28,
                       ),
-                      title: const Text(
-                        'Xác thực vân tay',
-                        style: TextStyle(
+                      title: Text(
+                        l.t('settings_biometric_title'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       subtitle: Text(
                         _biometricEnabled
-                            ? 'Bật bảo mật vân tay'
-                            : 'Tắt bảo mật vân tay',
+                            ? l.t('settings_biometric_on')
+                            : l.t('settings_biometric_off'),
                         style:
                             TextStyle(fontSize: 13, color: Colors.grey[600]),
                       ),
@@ -333,25 +393,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       ListTile(
                         leading: const Icon(Icons.brightness_6_rounded,
                             color: Color(0xFF5F6368)),
-                        title: const Text(
-                          'Giao diện sáng/tối',
-                          style: TextStyle(
+                        title: Text(
+                          l.t('settings_theme_title'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        subtitle: const Text(
-                          'Chọn chế độ hiển thị phù hợp với bạn',
-                          style: TextStyle(fontSize: 13),
+                        subtitle: Text(
+                          l.t('settings_theme_subtitle'),
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ),
                       const Divider(height: 1),
-                      _ThemeModeTile(mode: ThemeMode.system, label: 'Theo hệ thống'),
-                      _ThemeModeTile(mode: ThemeMode.light, label: 'Nền sáng'),
-                      _ThemeModeTile(mode: ThemeMode.dark, label: 'Nền tối'),
+                      _ThemeModeTile(mode: ThemeMode.system, labelKey: 'settings_theme_system'),
+                      _ThemeModeTile(mode: ThemeMode.light, labelKey: 'settings_theme_light'),
+                      _ThemeModeTile(mode: ThemeMode.dark, labelKey: 'settings_theme_dark'),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Language selection
                 Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
@@ -364,35 +425,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  child: SwitchListTile(
-                    secondary: Icon(
-                      Icons.auto_awesome,
-                      color:
-                          _autoAnalysisEnabled ? Colors.green[700] : Colors.grey,
-                      size: 28,
-                    ),
-                    title: const Text(
-                      'Tự động phân tích email mới',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.language, color: Color(0xFF5F6368)),
+                        title: Text(
+                          l.t('settings_language_title'),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      _autoAnalysisEnabled
-                          ? 'Email mới sẽ được AI phân tích ngầm và lưu thống kê'
-                          : 'Chỉ nhận thông báo email mới, không phân tích tự động',
-                      style:
-                          TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                    value: _autoAnalysisEnabled,
-                    onChanged: (value) {
-                      _toggleAutoAnalysis(value);
-                      Navigator.pop(context);
-                    },
-                    activeColor: Colors.green,
+                      const Divider(height: 1),
+                      _LanguageTile(
+                        locale: const Locale('vi'),
+                        labelKey: 'settings_language_vi',
+                      ),
+                      _LanguageTile(
+                        locale: const Locale('en'),
+                        labelKey: 'settings_language_en',
+                      ),
+                    ],
                   ),
                 ),
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 // Logout button
                 Container(
                   decoration: BoxDecoration(
@@ -402,9 +457,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text(
-                      'Đăng xuất',
-                      style: TextStyle(
+                    title: Text(
+                      l.t('settings_logout'),
+                      style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.w600,
                       ),
@@ -426,6 +481,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -447,11 +503,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Tìm kiếm trong email',
+              decoration: InputDecoration(
+                hintText: l.t('home_search_hint'),
                 border: InputBorder.none,
-                prefixIcon: Icon(Icons.search, color: Color(0xFF5F6368)),
-                contentPadding: EdgeInsets.symmetric(vertical: 10),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF5F6368)),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
               textInputAction: TextInputAction.search,
               onChanged: (value) {
@@ -477,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                   _loadNotificationCount();
                 },
-                tooltip: 'Thông báo',
+                tooltip: l.t('home_notifications_tooltip'),
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -558,7 +614,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     : null,
               ),
               accountName: Text(
-                _userData?['displayName'] ?? 'Người dùng',
+                _userData?['displayName'] ??
+                    AppLocalizations.of(context)
+                        .t('user_default_display_name'),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -576,7 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
                     child: Text(
-                      'Phân tích Email',
+                      l.t('drawer_section_analysis'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -587,9 +645,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.shield_outlined),
-                    title: const Text(
-                      'Kiểm tra Phishing',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    title: Text(
+                      l.t('drawer_check_phishing'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     selected: true,
                     selectedTileColor: Color(0xFFE8F0FE),
@@ -600,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.bar_chart),
-                    title: const Text('Thống kê'),
+                    title: Text(l.t('drawer_statistics')),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -611,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.description_outlined),
-                    title: const Text('Báo cáo chi tiết'),
+                    title: Text(l.t('drawer_reports')),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -624,7 +682,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
                     child: Text(
-                      'Cài đặt',
+                      l.t('drawer_settings_section'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -635,9 +693,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.security_outlined),
-                    title: const Text(
-                      'Bảo mật',
-                      style: TextStyle(
+                    title: Text(
+                      l.t('drawer_security'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -651,9 +709,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.info_outline),
-                    title: const Text(
-                      'Giới thiệu',
-                      style: TextStyle(
+                    title: Text(
+                      l.t('drawer_about'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -664,9 +722,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.help_outline),
-                    title: const Text(
-                      'Trợ giúp',
-                      style: TextStyle(
+                    title: Text(
+                      l.t('drawer_help'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -681,9 +739,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text(
-                'Đăng xuất',
-                style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+              title: Text(
+                l.t('common_logout'),
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -707,6 +765,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        final l = AppLocalizations.of(context);
         return SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -722,8 +781,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'WardMail giúp bạn phát hiện và chặn email lừa đảo, phishing '
-                  'ngay trong hộp thư Gmail.',
+                  l.t('intro_description'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -748,34 +806,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                  'WardMail làm được gì?',
-                        style: TextStyle(
+                        l.t('intro_what_can_do_title'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       _IntroBullet(
                         icon: Icons.shield_outlined,
-                        title: 'Quét nội dung email bằng AI',
-                        description:
-                            'Phân tích tiêu đề, nội dung, liên kết để phát hiện dấu hiệu lừa đảo.',
+                        title: 'intro_feature_scan_title',
+                        description: 'intro_feature_scan_desc',
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       _IntroBullet(
                         icon: Icons.notifications_active_outlined,
-                        title: 'Thông báo tức thì',
-                        description:
-                            'Cảnh báo khi phát hiện email nguy hiểm hoặc có dấu hiệu phishing.',
+                        title: 'intro_feature_notify_title',
+                        description: 'intro_feature_notify_desc',
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       _IntroBullet(
                         icon: Icons.bar_chart_outlined,
-                        title: 'Thống kê & báo cáo chi tiết',
-                        description:
-                            'Theo dõi lịch sử quét, tỷ lệ email an toàn, nghi ngờ và nguy hiểm.',
+                        title: 'intro_feature_stats_title',
+                        description: 'intro_feature_stats_desc',
                       ),
                     ],
                   ),
@@ -790,10 +845,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text(
-                    'Mẹo nhỏ: Hãy bật "Tự động phân tích email mới" trong phần Cài đặt '
-                    'để WardMail bảo vệ bạn ngay cả khi không mở ứng dụng.',
-                    style: TextStyle(
+                  child: Text(
+                    l.t('intro_tip_auto_analysis'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       height: 1.4,
@@ -817,50 +871,40 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        final l = AppLocalizations.of(context);
         return SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Trợ giúp nhanh',
-                  style: TextStyle(
+                  l.t('help_quick_title'),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _HelpSection(
-                  title: '1. Làm sao để bắt đầu?',
-                  content:
-                      '• Đăng nhập bằng Google hoặc Email.\n'
-                      '• Kết nối Gmail và cho phép WardMail đọc email để phân tích.\n'
-                      '• Vào phần Cài đặt để bật tự động phân tích email mới.',
+                  title: l.t('help_section1_title'),
+                  content: l.t('help_section1_content'),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _HelpSection(
-                  title: '2. Màu sắc cảnh báo nghĩa là gì?',
-                  content:
-                      '• Xanh lá: Email an toàn.\n'
-                      '• Vàng: Email có dấu hiệu nghi ngờ, nên kiểm tra kỹ.\n'
-                      '• Đỏ: Email nguy hiểm, không nên nhấp vào link hoặc tải file đính kèm.',
+                  title: l.t('help_section2_title'),
+                  content: l.t('help_section2_content'),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _HelpSection(
-                  title: '3. Tôi nên làm gì khi gặp email đáng ngờ?',
-                  content:
-                      '• Không trả lời email, không cung cấp mật khẩu hoặc mã OTP.\n'
-                      '• Tránh nhấp vào liên kết hoặc tải xuống tệp lạ.\n'
-                      '• Báo cáo email như spam/phishing trong Gmail để Google chặn tốt hơn.',
+                  title: l.t('help_section3_title'),
+                  content: l.t('help_section3_content'),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _HelpSection(
-                  title: '4. WardMail có xem nội dung riêng tư của tôi không?',
-                  content:
-                      'WardMail chỉ phân tích nội dung email để phát hiện dấu hiệu lừa đảo. '
-                      'Dữ liệu được xử lý bảo mật và chỉ phục vụ cho mục đích bảo vệ bạn.',
+                  title: l.t('help_section4_title'),
+                  content: l.t('help_section4_content'),
                 ),
               ],
             ),
@@ -884,6 +928,7 @@ class _IntroBullet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -901,7 +946,7 @@ class _IntroBullet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                l.t(title),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -909,7 +954,7 @@ class _IntroBullet extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                description,
+                l.t(description),
                 style: TextStyle(
                   fontSize: 13,
                   color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
@@ -977,12 +1022,13 @@ class _HelpSection extends StatelessWidget {
 
 class _ThemeModeTile extends StatelessWidget {
   final ThemeMode mode;
-  final String label;
+  final String labelKey;
 
-  const _ThemeModeTile({required this.mode, required this.label});
+  const _ThemeModeTile({required this.mode, required this.labelKey});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final current = ThemeService().themeMode.value;
 
     IconData icon;
@@ -1012,11 +1058,38 @@ class _ThemeModeTile extends StatelessWidget {
           Icon(icon, size: 20, color: const Color(0xFF5F6368)),
           const SizedBox(width: 8),
           Text(
-            label,
+            l.t(labelKey),
             style: const TextStyle(fontSize: 14),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  final Locale locale;
+  final String labelKey;
+
+  const _LanguageTile({
+    required this.locale,
+    required this.labelKey,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final current = Localizations.localeOf(context).languageCode;
+    final l = AppLocalizations.of(context);
+
+    return RadioListTile<String>(
+      value: locale.languageCode,
+      groupValue: current,
+      onChanged: (value) async {
+        if (value == null) return;
+        await LocaleService().setLocale(Locale(value));
+      },
+      dense: true,
+      title: Text(l.t(labelKey)),
     );
   }
 }

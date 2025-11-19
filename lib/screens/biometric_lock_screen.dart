@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/biometric_service.dart';
 import '../services/auth_service.dart';
+import '../localization/app_localizations.dart';
 
 class BiometricLockScreen extends StatefulWidget {
   const BiometricLockScreen({super.key});
@@ -28,6 +29,7 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
     });
 
     try {
+      final l = AppLocalizations.of(context);
       final result = await _biometricService.authenticate(skipSessionCheck: true);
       
       if (result.success && mounted) {
@@ -35,7 +37,9 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.errorMessage ?? 'Xác thực thất bại'),
+            content: Text(
+              result.errorMessage ?? l.t('biometric_auth_failed'),
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),
@@ -43,9 +47,14 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
+            content: Text(
+              l
+                  .t('error_with_message')
+                  .replaceFirst('{message}', e.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -60,19 +69,23 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   }
 
   Future<void> _handleLogout() async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+        title: Text(l.t('logout_confirm_title')),
+        content: Text(l.t('logout_confirm_message')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(l.t('common_cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l.t('common_logout'),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -86,8 +99,12 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -119,21 +136,20 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                const Text(
-                  'Xác thực bảo mật',
-                  style: TextStyle(
-                    fontSize: 28,
+                Text(
+                  l.t('biometric_title'),
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF202124),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Sử dụng vân tay hoặc PIN\nđể mở khóa ứng dụng',
+                  l.t('biometric_subtitle'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: theme.textTheme.bodyMedium?.color
+                        ?.withOpacity(0.7),
                     height: 1.5,
                   ),
                 ),
@@ -167,7 +183,7 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                           )
                         : const Icon(Icons.fingerprint_rounded, color: Colors.white),
                     label: Text(
-                      _isAuthenticating ? 'Đang xác thực...' : 'Xác thực',
+                      l.t('biometric_button'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -188,12 +204,13 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                 TextButton.icon(
                   onPressed: _handleLogout,
                   icon: const Icon(Icons.logout_rounded, size: 18),
-                  label: const Text(
-                    'Đăng xuất',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  label: Text(
+                    l.t('common_logout'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFFEA4335),
+                    foregroundColor:
+                        isDark ? const Color(0xFFFF8A80) : const Color(0xFFEA4335),
                   ),
                 ),
               ],

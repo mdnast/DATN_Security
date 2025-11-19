@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../services/scan_history_service.dart';
 import '../services/export_service.dart';
 import '../models/scan_result.dart';
+import '../localization/app_localizations.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -110,19 +111,20 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Báo cáo chi tiết',
-          style: TextStyle(
-            color: Color(0xFF202124),
+        title: Text(
+          l.t('reports_title'),
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
+        iconTheme: theme.appBarTheme.iconTheme,
         actions: [
           if (!_isLoading && _allScans.isNotEmpty)
             PopupMenuButton(
@@ -134,23 +136,23 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                     )
                   : const Icon(Icons.file_download),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'pdf',
                   child: Row(
                     children: [
                       Icon(Icons.picture_as_pdf, size: 20, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Xuất PDF'),
+                      Text(l.t('reports_export_pdf')),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'csv',
                   child: Row(
                     children: [
                       Icon(Icons.table_chart, size: 20, color: Colors.green),
                       SizedBox(width: 8),
-                      Text('Xuất CSV'),
+                      Text(l.t('reports_export_csv')),
                     ],
                   ),
                 ),
@@ -169,10 +171,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           labelColor: const Color(0xFF4285F4),
           unselectedLabelColor: Colors.grey,
           indicatorColor: const Color(0xFF4285F4),
-          tabs: const [
-            Tab(text: 'Xu hướng'),
-            Tab(text: 'Chi tiết'),
-            Tab(text: 'Phân tích'),
+          tabs: [
+            Tab(text: l.t('reports_tab_trends')),
+            Tab(text: l.t('reports_tab_details')),
+            Tab(text: l.t('reports_tab_analysis')),
           ],
         ),
       ),
@@ -192,23 +194,34 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.description_outlined, size: 80, color: Colors.grey[400]),
+            Icon(
+              Icons.description_outlined,
+              size: 80,
+              color: theme.colorScheme.onBackground.withOpacity(0.3),
+            ),
             const SizedBox(height: 24),
-            const Text(
-              'Chưa có báo cáo',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Text(
+              l.t('reports_empty_title'),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Kiểm tra email để tạo báo cáo',
+              l.t('reports_empty_subtitle'),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color:
+                    theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
             ),
           ],
         ),
@@ -218,6 +231,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
 
   Widget _buildTrendsTab() {
     final scansForChart = _getScansForRange();
+    final l = AppLocalizations.of(context);
     
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -231,7 +245,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ChoiceChip(
-                  label: const Text('7 ngày'),
+                  label: Text(l.t('reports_range_7_days')),
                   selected: _selectedRange == '7',
                   onSelected: (selected) {
                     if (selected) {
@@ -241,7 +255,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text('30 ngày'),
+                  label: Text(l.t('reports_range_30_days')),
                   selected: _selectedRange == '30',
                   onSelected: (selected) {
                     if (selected) {
@@ -251,7 +265,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text('Tất cả'),
+                  label: Text(l.t('reports_range_all')),
                   selected: _selectedRange == 'all',
                   onSelected: (selected) {
                     if (selected) {
@@ -295,6 +309,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   Widget _buildTimelineChart(List<ScanResult> scans) {
+    final l = AppLocalizations.of(context);
     final Map<String, Map<String, int>> dailyData = {};
     
     for (var scan in scans) {
@@ -339,10 +354,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         children: [
           Text(
             _selectedRange == 'all'
-                ? 'Xu hướng toàn bộ thời gian'
+                ? l.t('reports_timeline_all_time')
                 : _selectedRange == '30'
-                    ? 'Xu hướng 30 ngày qua'
-                    : 'Xu hướng 7 ngày qua',
+                    ? l.t('reports_timeline_30_days')
+                    : l.t('reports_timeline_7_days'),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
@@ -351,7 +366,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
             child: dailyData.isEmpty
                 ? Center(
                     child: Text(
-                      'Không có dữ liệu',
+                      l.t('reports_no_data'),
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   )
@@ -435,11 +450,14 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildChartLegend('Nguy hiểm', const Color(0xFFEA4335)),
+              _buildChartLegend(
+                  l.t('reports_legend_phishing'), const Color(0xFFEA4335)),
               const SizedBox(width: 24),
-              _buildChartLegend('Nghi ngờ', const Color(0xFFFBBC04)),
+              _buildChartLegend(
+                  l.t('reports_legend_suspicious'), const Color(0xFFFBBC04)),
               const SizedBox(width: 24),
-              _buildChartLegend('An toàn', const Color(0xFF34A853)),
+              _buildChartLegend(
+                  l.t('reports_legend_safe'), const Color(0xFF34A853)),
             ],
           ),
         ],
@@ -462,6 +480,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   Widget _buildDailyBreakdown() {
+    final l = AppLocalizations.of(context);
     final emailsByDate = <String, List<ScanResult>>{};
     
     for (var scan in _allScans) {
@@ -491,9 +510,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Phân tích theo ngày',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            l.t('reports_daily_analysis_title'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           ...sortedDates.take(7).map((date) {
@@ -510,13 +529,15 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   Widget _buildDayItem(String date, int phishing, int suspicious, int safe) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,13 +550,16 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           Row(
             children: [
               Expanded(
-                child: _buildDayCount('Nguy hiểm', phishing, const Color(0xFFEA4335)),
+                child: _buildDayCount(
+                    l.t('reports_status_phishing'), phishing, const Color(0xFFEA4335)),
               ),
               Expanded(
-                child: _buildDayCount('Nghi ngờ', suspicious, const Color(0xFFFBBC04)),
+                child: _buildDayCount(
+                    l.t('reports_status_suspicious'), suspicious, const Color(0xFFFBBC04)),
               ),
               Expanded(
-                child: _buildDayCount('An toàn', safe, const Color(0xFF34A853)),
+                child: _buildDayCount(
+                    l.t('reports_status_safe'), safe, const Color(0xFF34A853)),
               ),
             ],
           ),
@@ -579,28 +603,30 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   Widget _buildDetailCard(ScanResult scan) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     Color statusColor;
     String statusText;
     IconData statusIcon;
     
     if (scan.isPhishing) {
       statusColor = const Color(0xFFEA4335);
-      statusText = 'Nguy hiểm';
+      statusText = l.t('reports_status_phishing');
       statusIcon = Icons.dangerous;
     } else if (scan.isSuspicious) {
       statusColor = const Color(0xFFFBBC04);
-      statusText = 'Nghi ngờ';
+      statusText = l.t('reports_status_suspicious');
       statusIcon = Icons.warning_amber;
     } else {
       statusColor = const Color(0xFF34A853);
-      statusText = 'An toàn';
+      statusText = l.t('reports_status_safe');
       statusIcon = Icons.check_circle;
     }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: statusColor.withOpacity(0.3)),
         boxShadow: [
@@ -671,7 +697,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           ),
           const SizedBox(height: 8),
           Text(
-            'Từ: ${scan.from}',
+            AppLocalizations.of(context)
+                .t('reports_from_label')
+                .replaceFirst('{from}', scan.from),
             style: TextStyle(fontSize: 13, color: Colors.grey[700]),
           ),
           if (scan.detectedThreats.isNotEmpty) ...[
@@ -707,6 +735,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   Widget _buildAnalysisTab() {
     final phishingEmails = _allScans.where((s) => s.isPhishing).toList();
     final suspiciousEmails = _allScans.where((s) => s.isSuspicious).toList();
+    final l = AppLocalizations.of(context);
     
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -717,17 +746,17 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildAnalysisCard(
-              'Email nguy hiểm',
+              l.t('reports_status_phishing'),
               phishingEmails.length.toString(),
-              'Phát hiện dấu hiệu phishing rõ ràng',
+              l.t('reports_analysis_dangerous_desc'),
               Icons.dangerous,
               const Color(0xFFEA4335),
             ),
             const SizedBox(height: 12),
             _buildAnalysisCard(
-              'Email nghi ngờ',
+              l.t('reports_status_suspicious'),
               suspiciousEmails.length.toString(),
-              'Cần xem xét kỹ hơn',
+              l.t('reports_analysis_suspicious_desc'),
               Icons.warning_amber,
               const Color(0xFFFBBC04),
             ),
@@ -801,6 +830,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
 
   Widget _buildCommonThreats() {
     final threatTrends = _statistics['threatTrends'] as Map<String, int>? ?? {};
+    final l = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -818,9 +848,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Mối đe dọa phổ biến',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            l.t('reports_common_threats_title'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           if (threatTrends.isEmpty)
@@ -828,7 +858,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  'Không có mối đe dọa nào được phát hiện',
+                  l.t('reports_common_threats_empty'),
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               ),
@@ -870,6 +900,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   Widget _buildRecommendations() {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -890,28 +921,28 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
             children: [
               Icon(Icons.lightbulb, color: Colors.amber[700]),
               const SizedBox(width: 8),
-              const Text(
-                'Khuyến nghị bảo mật',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l.t('reports_security_recommendations_title'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 16),
           _buildRecommendationItem(
-            'Không nhấp vào link lạ',
-            'Luôn kiểm tra URL trước khi nhấp vào bất kỳ liên kết nào trong email',
+            l.t('reports_recommendation_1_title'),
+            l.t('reports_recommendation_1_desc'),
           ),
           _buildRecommendationItem(
-            'Xác minh người gửi',
-            'Kiểm tra địa chỉ email người gửi có khớp với domain chính thức không',
+            l.t('reports_recommendation_2_title'),
+            l.t('reports_recommendation_2_desc'),
           ),
           _buildRecommendationItem(
-            'Cảnh giác với email khẩn cấp',
-            'Email yêu cầu hành động gấp thường là dấu hiệu của phishing',
+            l.t('reports_recommendation_3_title'),
+            l.t('reports_recommendation_3_desc'),
           ),
           _buildRecommendationItem(
-            'Bật xác thực 2 yếu tố',
-            'Thêm lớp bảo mật cho tài khoản quan trọng',
+            l.t('reports_recommendation_4_title'),
+            l.t('reports_recommendation_4_desc'),
           ),
         ],
       ),

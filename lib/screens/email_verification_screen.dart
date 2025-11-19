@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../localization/app_localizations.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
@@ -42,17 +43,19 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Future<void> _handleResendEmail() async {
     if (!_canResend) return;
 
+    final l = AppLocalizations.of(context);
+
     setState(() {
       _isResending = true;
     });
 
     try {
       await _authService.sendEmailVerification();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email xác thực đã được gửi lại!'),
+          SnackBar(
+            content: Text(l.t('email_verification_resend')),
             backgroundColor: Colors.green,
           ),
         );
@@ -77,9 +80,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       }
     } catch (error) {
       if (mounted) {
+        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${error.toString()}'),
+            content: Text(
+              l
+                  .t('error_with_message')
+                  .replaceFirst('{message}', error.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -102,6 +110,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final email = ModalRoute.of(context)?.settings.arguments as String? ?? 
                   _authService.currentUser?.email ?? '';
 
@@ -114,7 +123,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           TextButton.icon(
             onPressed: _handleLogout,
             icon: const Icon(Icons.logout_rounded, size: 18),
-            label: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600)),
+            label: Text(
+              l.t('common_logout'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFEA4335),
             ),
@@ -152,9 +164,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Xác thực Email',
-                  style: TextStyle(
+                Text(
+                  l.t('email_verification_title'),
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF202124),
@@ -162,7 +174,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Chúng tôi đã gửi email xác thực đến:',
+                  l.t('email_verification_sent_to'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -194,26 +206,26 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFF4285F4).withOpacity(0.3)),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.info_outline_rounded, color: Color(0xFF4285F4), size: 24),
-                      SizedBox(width: 12),
+                      const Icon(Icons.info_outline_rounded, color: Color(0xFF4285F4), size: 24),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Vui lòng kiểm tra email',
-                              style: TextStyle(
+                              l.t('email_verification_check_email_title'),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF202124),
                                 fontSize: 14,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
-                              'Nhấp vào link trong email để xác thực tài khoản. Kiểm tra cả thư mục spam nếu không thấy.',
-                              style: TextStyle(
+                              l.t('email_verification_check_email_desc'),
+                              style: const TextStyle(
                                 color: Color(0xFF5F6368),
                                 fontSize: 12,
                               ),
@@ -238,7 +250,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Đang chờ xác thực...',
+                      l.t('email_verification_waiting'),
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -248,7 +260,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Không nhận được email?',
+                  l.t('email_verification_not_received'),
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -272,8 +284,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         : const Icon(Icons.refresh_rounded),
                     label: Text(
                       _canResend
-                          ? 'Gửi lại email'
-                          : 'Gửi lại sau $_resendCountdown giây',
+                          ? l.t('email_verification_resend')
+                          : l
+                              .t('email_verification_resend_after_seconds')
+                              .replaceFirst('{seconds}', '$_resendCountdown'),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

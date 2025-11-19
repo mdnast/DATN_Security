@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/gmail_service.dart';
 import '../models/email_attachment.dart';
+import '../localization/app_localizations.dart';
 
 class ComposeEmailScreen extends StatefulWidget {
   final String? initialTo;
@@ -45,6 +46,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
   }
 
   Future<void> _sendEmail() async {
+    final l = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSending = true);
@@ -68,8 +70,8 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã gửi email'),
+          SnackBar(
+            content: Text(l.t('compose_email_sent')),
             backgroundColor: Colors.green,
           ),
         );
@@ -77,9 +79,14 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi gửi email: $e'),
+            content: Text(
+              l
+                  .t('compose_email_send_error')
+                  .replaceFirst('{error}', e.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -92,6 +99,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
   }
 
   void _previewAttachment(PlatformFile file) {
+    final l = AppLocalizations.of(context);
     final data = file.bytes;
     if (data == null) return;
 
@@ -118,7 +126,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Đóng'),
+                child: Text(l.t('common_close')),
               ),
             ],
           ),
@@ -150,12 +158,12 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 )
-              : const Text('Không thể hiển thị trước nội dung file này. Bạn vẫn có thể gửi kèm file.'),
+              : Text(l.t('compose_email_preview_not_supported')),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Đóng'),
+            child: Text(l.t('common_close')),
           ),
         ],
       ),
@@ -198,9 +206,10 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Soạn email'),
+        title: Text(l.t('compose_email_title')),
         actions: [
           IconButton(
             icon: _isSending
@@ -222,14 +231,14 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
             children: [
               TextFormField(
                 controller: _toController,
-                decoration: const InputDecoration(
-                  labelText: 'Người nhận',
-                  hintText: 'ví dụ: user@gmail.com',
+                decoration: InputDecoration(
+                  labelText: l.t('compose_email_to_label'),
+                  hintText: l.t('compose_email_to_hint'),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Vui lòng nhập email người nhận';
+                    return l.t('compose_email_to_required');
                   }
                   return null;
                 },
@@ -237,8 +246,8 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _subjectController,
-                decoration: const InputDecoration(
-                  labelText: 'Chủ đề',
+                decoration: InputDecoration(
+                  labelText: l.t('compose_email_subject_label'),
                 ),
               ),
               const SizedBox(height: 12),
@@ -247,13 +256,15 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                   ElevatedButton.icon(
                     onPressed: _pickAttachments,
                     icon: const Icon(Icons.attach_file),
-                    label: const Text('Đính kèm file'),
+                    label: Text(l.t('compose_email_attach_button')),
                   ),
                   const SizedBox(width: 12),
                   if (_attachments.isNotEmpty)
                     Expanded(
                       child: Text(
-                        '${_attachments.length} file đã chọn',
+                        l
+                            .t('compose_email_attachments_count')
+                            .replaceFirst('{count}', '${_attachments.length}'),
                         style: const TextStyle(fontSize: 12),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -292,8 +303,8 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _bodyController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nội dung',
+                  decoration: InputDecoration(
+                    labelText: l.t('compose_email_body_label'),
                     alignLabelWithHint: true,
                   ),
                   maxLines: null,

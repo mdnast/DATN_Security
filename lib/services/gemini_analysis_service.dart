@@ -1,5 +1,7 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'locale_service.dart';
 
 class GeminiAnalysisService {
   // API Key - NÊN LƯU TRONG .env HOẶC SECURE STORAGE
@@ -27,6 +29,8 @@ class GeminiAnalysisService {
   
   /// Trợ lý Gmail chung: trả lời câu hỏi về cách dùng Gmail, bảo mật, spam...
   Future<String> askGeneralGmailQuestion(String question) async {
+    final locale = LocaleService().locale.value ?? const Locale('vi');
+    final isEnglish = locale.languageCode == 'en';
     int maxRetries = _availableModels.length;
     int attempt = 0;
 
@@ -37,7 +41,24 @@ class GeminiAnalysisService {
           apiKey: _chatApiKey.isNotEmpty ? _chatApiKey : _apiKey,
         );
 
-        final prompt = '''
+        final prompt = isEnglish
+            ? '''
+You are an assistant specialized in Gmail.
+
+Your tasks:
+- Explain how to use Gmail, manage the inbox, filter spam, report phishing, and secure the account.
+- Provide step-by-step, easy-to-understand guidance suitable for normal users.
+- You may explain how to recognize phishing emails IN GENERAL, but you do not need specific email content.
+- NEVER ask the user for passwords, verification codes, OTPs, security codes, login links, or card/account information.
+
+User question:
+"""
+$question
+"""
+
+Answer in clear, concise English and focus on practical guidance.
+'''
+            : '''
 Bạn là trợ lý chuyên về Gmail.
 
 Nhiệm vụ của bạn:
@@ -82,6 +103,8 @@ Trả lời bằng tiếng Việt, rõ ràng, gọn gàng, tập trung vào hư�
     required String from,
     required String question,
   }) async {
+    final locale = LocaleService().locale.value ?? const Locale('vi');
+    final isEnglish = locale.languageCode == 'en';
     int maxRetries = _availableModels.length;
     int attempt = 0;
 
@@ -92,7 +115,25 @@ Trả lời bằng tiếng Việt, rõ ràng, gọn gàng, tập trung vào hư�
           apiKey: _chatApiKey.isNotEmpty ? _chatApiKey : _apiKey,
         );
 
-        final prompt = '''
+        final prompt = isEnglish
+            ? '''
+You are an email security assistant.
+
+FROM: $from
+SUBJECT: $subject
+BODY:
+$body
+
+User question about this email:
+"$question"
+
+Answer in clear and concise English, prioritizing analysis of links/URLs in the email:
+- Assess how safe/dangerous the email is, especially based on the sender domain and any URLs in the content.
+- Point out specific URLs or domains that look suspicious (if any) and why.
+- Provide 1–3 concrete steps the user should take (for example: do not click links, verify the domain, report spam, etc.).
+If the information is not sufficient to conclude, say that clearly.
+'''
+            : '''
 Bạn là trợ lý an toàn email.
 
 FROM: $from
@@ -265,7 +306,38 @@ Quy tắc:
     required String body,
     required String from,
   }) {
-    return '''
+    final locale = LocaleService().locale.value ?? const Locale('vi');
+    final isEnglish = locale.languageCode == 'en';
+
+    return isEnglish
+        ? '''
+Analyze the email for phishing indicators and ONLY return ONE valid JSON object (no markdown, no explanatory text).
+
+FROM:$from
+SUBJECT:$subject
+BODY:$body
+
+Example JSON (keep the keys, change the values):
+{
+  "risk_score": 15,
+  "risk_level": "Low",
+  "summary": "short summary",
+  "detailed_analysis": {
+    "sender_analysis": "sender analysis",
+    "content_analysis": "content analysis",
+    "technical_analysis": "technical analysis",
+    "context_analysis": "context analysis"
+  },
+  "red_flags": [],
+  "recommendations": []
+}
+
+Rules:
+- risk_score: number 0–100 (0 safe, 100 very dangerous).
+- risk_level: one of "Low", "Medium", "High", "Critical".
+- Do not add any text outside the JSON.
+'''
+        : '''
 Phân tích email có dấu hiệu phishing và CHỈ trả về MỘT JSON hợp lệ (không markdown, không text giải thích).
 
 FROM:$from

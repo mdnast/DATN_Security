@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/material.dart';
 import 'gmail_service.dart';
 import 'notification_service.dart';
 import 'email_analysis_service.dart';
 import 'scan_history_service.dart';
 import '../models/email_message.dart';
 import 'auto_analysis_settings_service.dart';
+import 'locale_service.dart';
+import '../localization/app_localizations.dart';
 
 /// Service theo dõi email mới và hiển thị thông báo
 class EmailMonitorService {
@@ -175,8 +178,53 @@ class EmailMonitorService {
       });
       await storage.write(key: 'email_cache_${email.id}', value: emailJson);
       
-      // KHÔNG UPDATE NOTIFICATION - user đã thấy rồi
-      // Kết quả sẽ hiện khi user tap vào notification
+      // Gửi thêm một thông báo kết quả phân tích để user biết email đó
+      // nguy hiểm / nghi ngờ / an toàn là email nào.
+      final data = {
+        'email_id': email.id,
+        'from': email.from,
+        'subject': email.subject,
+        'snippet': email.snippet,
+        'body': email.body ?? email.snippet,
+        'date': email.date.toIso8601String(),
+        'action': 'open_email_detail',
+      };
+
+      if (result.isPhishing) {
+        // Use current app locale for notification text
+        final locale = LocaleService().locale.value ?? const Locale('vi');
+        final l = AppLocalizations(locale);
+        await _notificationService.showNotification(
+          title: l.t('notif_phishing_title'),
+          body: l
+              .t('notif_phishing_body')
+              .replaceFirst('{from}', email.from),
+          type: 'phishing',
+          data: data,
+        );
+      } else if (result.isSuspicious) {
+        final locale = LocaleService().locale.value ?? const Locale('vi');
+        final l = AppLocalizations(locale);
+        await _notificationService.showNotification(
+          title: l.t('notif_suspicious_title'),
+          body: l
+              .t('notif_suspicious_body')
+              .replaceFirst('{from}', email.from),
+          type: 'security',
+          data: data,
+        );
+      } else if (result.isSafe) {
+        final locale = LocaleService().locale.value ?? const Locale('vi');
+        final l = AppLocalizations(locale);
+        await _notificationService.showNotification(
+          title: l.t('notif_safe_title'),
+          body: l
+              .t('notif_safe_body')
+              .replaceFirst('{from}', email.from),
+          type: 'safe',
+          data: data,
+        );
+      }
       
     } catch (e) {
       print('⚠️ Silent analysis failed (not critical): $e');

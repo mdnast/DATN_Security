@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/scan_history_service.dart';
 import '../models/scan_result.dart';
+import '../localization/app_localizations.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -32,35 +33,39 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Thống kê',
-          style: TextStyle(
-            color: Color(0xFF202124),
+        title: Text(
+          l.t('statistics_title'),
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F6368)),
+        iconTheme: theme.appBarTheme.iconTheme,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadStatistics,
-            tooltip: 'Làm mới',
+            tooltip: l.t('statistics_refresh'),
           ),
           PopupMenuButton(
             icon: const Icon(Icons.more_vert),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'clear',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Xóa lịch sử', style: TextStyle(color: Colors.red)),
+                    const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text(
+                      l.t('statistics_clear_history_menu'),
+                      style: const TextStyle(color: Colors.red),
+                    ),
                   ],
                 ),
               ),
@@ -70,16 +75,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Xác nhận'),
-                    content: const Text('Bạn có chắc chắn muốn xóa toàn bộ lịch sử?'),
+                    title: Text(l.t('statistics_clear_history_title')),
+                    content: Text(l.t('statistics_clear_history_message')),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Hủy'),
+                        child: Text(l.t('common_cancel')),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                        child: Text(
+                          l.t('notifications_action_delete'),
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       ),
                     ],
                   ),
@@ -102,6 +110,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -121,16 +130,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Chưa có dữ liệu',
-              style: TextStyle(
+            Text(
+              l.t('statistics_empty_title'),
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Kiểm tra email để xem thống kê',
+              l.t('statistics_empty_subtitle'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -171,6 +180,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildOverviewCards(int total, int phishing, int suspicious, int safe) {
+    final l = AppLocalizations.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final itemWidth = (constraints.maxWidth - 12) / 2;
@@ -178,9 +188,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Tổng quan',
-              style: TextStyle(
+            Text(
+              l.t('statistics_overview_title'),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -193,7 +203,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 SizedBox(
                   width: itemWidth,
                   child: _buildStatCard(
-                    'Tổng số',
+                    l.t('statistics_total_label'),
                     total.toString(),
                     Icons.email_outlined,
                     const Color(0xFF4285F4),
@@ -202,7 +212,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 SizedBox(
                   width: itemWidth,
                   child: _buildStatCard(
-                    'Nguy hiểm',
+                    l.t('reports_status_phishing'),
                     phishing.toString(),
                     Icons.warning_amber_rounded,
                     const Color(0xFFEA4335),
@@ -211,7 +221,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 SizedBox(
                   width: itemWidth,
                   child: _buildStatCard(
-                    'Nghi ngờ',
+                    l.t('reports_status_suspicious'),
                     suspicious.toString(),
                     Icons.help_outline,
                     const Color(0xFFFBBC04),
@@ -220,7 +230,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 SizedBox(
                   width: itemWidth,
                   child: _buildStatCard(
-                    'An toàn',
+                    l.t('reports_status_safe'),
                     safe.toString(),
                     Icons.check_circle_outline,
                     const Color(0xFF34A853),
@@ -288,6 +298,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildPieChart(int phishing, int suspicious, int safe) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -304,9 +315,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Phân bổ kết quả',
-            style: TextStyle(
+          Text(
+            l.t('statistics_distribution_title'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -360,9 +371,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildLegendItem('Nguy hiểm', const Color(0xFFEA4335)),
-              _buildLegendItem('Nghi ngờ', const Color(0xFFFBBC04)),
-              _buildLegendItem('An toàn', const Color(0xFF34A853)),
+              _buildLegendItem(l.t('reports_status_phishing'), const Color(0xFFEA4335)),
+              _buildLegendItem(l.t('reports_status_suspicious'), const Color(0xFFFBBC04)),
+              _buildLegendItem(l.t('reports_status_safe'), const Color(0xFF34A853)),
             ],
           ),
         ],
@@ -391,6 +402,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildRecentScans() {
+    final l = AppLocalizations.of(context);
     final recentScans = _statistics['recentScans'] as List<ScanResult>? ?? [];
 
     if (recentScans.isEmpty) {
@@ -413,9 +425,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Kiểm tra gần đây',
-            style: TextStyle(
+          Text(
+            l.t('statistics_recent_scans_title'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -501,6 +513,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       return const SizedBox.shrink();
     }
 
+    final l = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -517,9 +531,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Mối đe dọa phổ biến',
-            style: TextStyle(
+          Text(
+            l.t('reports_common_threats_title'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -534,29 +548,44 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildThreatItem(String threat, int count) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red[50],
+        color: isDark
+            ? theme.colorScheme.errorContainer.withOpacity(0.2)
+            : Colors.red[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[100]!),
+        border: Border.all(
+          color: isDark
+              ? theme.colorScheme.error
+              : Colors.red[100]!,
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.red[100],
+              color: isDark
+                  ? theme.colorScheme.error.withOpacity(0.2)
+                  : Colors.red[100],
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Icon(Icons.bug_report, color: Colors.red[700], size: 16),
+            child: Icon(
+              Icons.bug_report,
+              color: theme.colorScheme.error,
+              size: 16,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               threat,
-              style: const TextStyle(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -565,7 +594,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFEA4335),
+              color: theme.colorScheme.error,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

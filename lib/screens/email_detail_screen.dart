@@ -5,6 +5,7 @@ import '../models/scan_result.dart';
 import '../services/email_analysis_service.dart';
 import '../services/scan_history_service.dart';
 import '../services/notification_service.dart';
+import '../localization/app_localizations.dart';
 import 'email_ai_chat_screen.dart';
 import 'compose_email_screen.dart';
 
@@ -49,6 +50,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
   Future<void> _analyzeEmail() async {
     if (!mounted) return;
+    final l = AppLocalizations.of(context);
     setState(() => _isAnalyzing = true);
 
     try {
@@ -56,23 +58,45 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       
       await _scanHistoryService.saveScanResult(result);
       
+      final notificationData = {
+        'email_id': widget.email.id,
+        'from': widget.email.from,
+        'subject': widget.email.subject,
+        'snippet': widget.email.snippet,
+        'body': widget.email.body ?? widget.email.snippet,
+        'date': widget.email.date.toIso8601String(),
+        'photoUrl': widget.email.photoUrl,
+        'action': 'open_email_detail',
+      };
+
+      final from = widget.email.from;
+
       if (result.isPhishing) {
         await _notificationService.showNotification(
-          title: '🚨 Phát hiện email phishing!',
-          body: 'Email từ ${widget.email.from} có dấu hiệu lừa đảo',
+          title: l.t('notif_phishing_title'),
+          body: l
+              .t('notif_phishing_body')
+              .replaceFirst('{from}', from),
           type: 'phishing',
+          data: notificationData,
         );
       } else if (result.isSuspicious) {
         await _notificationService.showNotification(
-          title: '⚠️ Email nghi ngờ',
-          body: 'Email từ ${widget.email.from} cần xem xét kỹ hơn',
+          title: l.t('notif_suspicious_title'),
+          body: l
+              .t('notif_suspicious_body')
+              .replaceFirst('{from}', from),
           type: 'security',
+          data: notificationData,
         );
       } else {
         await _notificationService.showNotification(
-          title: '✅ Email an toàn',
-          body: 'Email từ ${widget.email.from} đã được kiểm tra và an toàn',
+          title: l.t('notif_safe_title'),
+          body: l
+              .t('notif_safe_body')
+              .replaceFirst('{from}', from),
           type: 'safe',
+          data: notificationData,
         );
       }
 
@@ -85,7 +109,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Phân tích hoàn tất!'),
+            content: Text(l.t('email_detail_analysis_done')),
             backgroundColor: Colors.green,
           ),
         );
@@ -94,7 +118,11 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi phân tích: $e'),
+            content: Text(
+              l
+                  .t('email_detail_analysis_error')
+                  .replaceFirst('{error}', e.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -108,6 +136,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
 
@@ -120,7 +149,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'WardMail',
+              l.t('app_title'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -149,7 +178,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome),
-            tooltip: 'Hỏi AI về email',
+            tooltip: l.t('email_detail_ask_ai_tooltip'),
             onPressed: () {
               Navigator.push(
                 context,
@@ -178,28 +207,28 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                   break;
               }
             },
-            itemBuilder: (context) => const [
+            itemBuilder: (context) => [
               PopupMenuItem(
                 value: _EmailDetailMenuAction.reply,
                 child: ListTile(
-                  leading: Icon(Icons.reply),
-                  title: Text('Trả lời'),
+                  leading: const Icon(Icons.reply),
+                  title: Text(l.t('email_detail_menu_reply')),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
               PopupMenuItem(
                 value: _EmailDetailMenuAction.forward,
                 child: ListTile(
-                  leading: Icon(Icons.forward),
-                  title: Text('Chuyển tiếp'),
+                  leading: const Icon(Icons.forward),
+                  title: Text(l.t('email_detail_menu_forward')),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
               PopupMenuItem(
                 value: _EmailDetailMenuAction.compose,
                 child: ListTile(
-                  leading: Icon(Icons.edit),
-                  title: Text('Soạn email mới'),
+                  leading: const Icon(Icons.edit),
+                  title: Text(l.t('email_detail_menu_compose')),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -285,8 +314,10 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           : const Icon(Icons.security, color: Colors.white),
       label: Text(
         _isAnalyzing
-            ? 'Đang phân tích...'
-            : (_scanResult == null ? 'Phân tích Email' : 'Phân tích lại Email'),
+            ? AppLocalizations.of(context).t('email_detail_analyzing')
+            : (_scanResult == null
+                ? AppLocalizations.of(context).t('email_detail_analyze')
+                : AppLocalizations.of(context).t('email_detail_reanalyze')),
         style: const TextStyle(color: Colors.white),
       ),
     );
@@ -297,6 +328,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l = AppLocalizations.of(context);
 
     Color statusColor;
     String statusText;
@@ -305,19 +337,19 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
     if (_scanResult!.isPhishing) {
       statusColor = const Color(0xFFEA4335);
-      statusText = 'NGUY HIỂM';
+      statusText = l.t('email_detail_status_phishing');
       statusIcon = Icons.dangerous;
-      statusDescription = 'Email này có dấu hiệu lừa đảo. Không nên mở link hoặc tải file đính kèm.';
+      statusDescription = l.t('email_detail_status_phishing_desc');
     } else if (_scanResult!.isSuspicious) {
       statusColor = const Color(0xFFFBBC04);
-      statusText = 'NGHI NGỜ';
+      statusText = l.t('email_detail_status_suspicious');
       statusIcon = Icons.warning_amber;
-      statusDescription = 'Email này có một số dấu hiệu đáng ngờ. Hãy cẩn thận khi tương tác.';
+      statusDescription = l.t('email_detail_status_suspicious_desc');
     } else {
       statusColor = const Color(0xFF34A853);
-      statusText = 'AN TOÀN';
+      statusText = l.t('email_detail_status_safe');
       statusIcon = Icons.check_circle;
-      statusDescription = 'Email này đã được kiểm tra và có vẻ an toàn.';
+      statusDescription = l.t('email_detail_status_safe_desc');
     }
 
     return Container(
@@ -393,9 +425,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           ),
           if (_scanResult!.detectedThreats.isNotEmpty) ...[
             const SizedBox(height: 16),
-            const Text(
-              'Mối đe dọa phát hiện:',
-              style: TextStyle(
+            Text(
+              l.t('email_detail_detected_threats'),
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -455,7 +487,12 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           ],
           const SizedBox(height: 12),
           Text(
-            'Phân tích lúc: ${DateFormat('dd/MM/yyyy HH:mm').format(_scanResult!.scanDate)}',
+            l
+                .t('email_detail_analyzed_at')
+                .replaceFirst(
+                    '{time}',
+                    DateFormat('dd/MM/yyyy HH:mm')
+                        .format(_scanResult!.scanDate)),
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[600],
@@ -468,6 +505,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
   Widget _buildEmailContent() {
     final bodyText = _decodeHtmlEntities(widget.email.body ?? widget.email.snippet);
+    final l = AppLocalizations.of(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -486,9 +524,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Thông tin Email',
-            style: TextStyle(
+          Text(
+            l.t('email_detail_info_title'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -496,16 +534,17 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           const Divider(height: 24),
           _buildSenderRow(),
           const SizedBox(height: 12),
-          _buildInfoRow('Tiêu đề:', widget.email.subject),
+          _buildInfoRow(
+              l.t('email_detail_info_subject'), widget.email.subject),
           const SizedBox(height: 12),
           _buildInfoRow(
-            'Ngày:',
+            l.t('email_detail_info_date'),
             DateFormat('dd/MM/yyyy HH:mm').format(widget.email.date),
           ),
           const Divider(height: 24),
-          const Text(
-            'Nội dung:',
-            style: TextStyle(
+          Text(
+            l.t('email_detail_info_content'),
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Color(0xFF5F6368),
@@ -646,6 +685,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
     final reasons = geminiData['reasons'] as List<dynamic>? ?? [];
     final recommendations = geminiData['recommendations'] as List<dynamic>? ?? [];
     final detailedAnalysis = geminiData['detailedAnalysis'] as Map<String, dynamic>? ?? {};
+    final l = AppLocalizations.of(context);
     
     // Lấy risk score và xác định màu sắc
     final riskScore = geminiData['riskScore']?.toInt() ?? 0;
@@ -693,9 +733,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              const Text(
-                'Phân tích bởi Gemini AI',
-                style: TextStyle(
+              Text(
+                l.t('gemini_analysis_title'),
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -722,9 +762,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         
         if (reasons.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text(
-            'Lý do đánh giá:',
-            style: TextStyle(
+          Text(
+            l.t('gemini_analysis_reasons_title'),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -760,9 +800,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
         if (recommendations.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text(
-            'Khuyến nghị:',
-            style: TextStyle(
+          Text(
+            l.t('gemini_analysis_recommendations_title'),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -803,9 +843,9 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           const SizedBox(height: 12),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            title: const Text(
-              'Phân tích chi tiết',
-              style: TextStyle(
+            title: Text(
+              l.t('gemini_analysis_details_title'),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -852,6 +892,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final l = AppLocalizations.of(context);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -860,10 +901,10 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
             children: [
               Icon(Icons.bug_report, color: Colors.red[700], size: 24),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Chi tiết mối đe dọa',
-                  style: TextStyle(fontSize: 18),
+                  l.t('email_detail_threat_detail_title'),
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ],
@@ -881,7 +922,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Đóng'),
+              child: Text(l.t('email_detail_threat_detail_close')),
             ),
           ],
         );
@@ -891,16 +932,24 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
 
   String _getConfidenceLabel() {
     final confidencePercent = (_scanResult!.confidenceScore * 100).toInt();
+    final l = AppLocalizations.of(context);
+    final percentStr = confidencePercent.toString();
     
     if (_scanResult!.isPhishing) {
       // Email nguy hiểm → hiển thị "Độ nguy hiểm"
-      return 'Độ nguy hiểm: $confidencePercent%';
+      return l
+          .t('email_detail_confidence_phishing')
+          .replaceFirst('{percent}', percentStr);
     } else if (_scanResult!.isSuspicious) {
       // Email nghi ngờ → hiển thị "Mức độ nghi ngờ"
-      return 'Mức độ nghi ngờ: $confidencePercent%';
+      return l
+          .t('email_detail_confidence_suspicious')
+          .replaceFirst('{percent}', percentStr);
     } else {
       // Email an toàn → hiển thị "Độ an toàn"
-      return 'Độ an toàn: $confidencePercent%';
+      return l
+          .t('email_detail_confidence_safe')
+          .replaceFirst('{percent}', percentStr);
     }
   }
 }

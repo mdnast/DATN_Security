@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/gemini_analysis_service.dart';
+import '../localization/app_localizations.dart';
 
 class GmailAiChatScreen extends StatefulWidget {
   final String? initialQuestion;
@@ -58,11 +59,15 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _messages.add(_ChatMessage(
-          text: 'Không thể kết nối tới AI: ${e.toString()}',
-          isUser: false,
-          isError: true,
-        ));
+        _messages.add(
+          _ChatMessage(
+            text: AppLocalizations.of(context)
+                .t('gmail_ai_chat_error')
+                .replaceFirst('{error}', e.toString()),
+            isUser: false,
+            isError: true,
+          ),
+        );
       });
       _scrollToBottom();
     } finally {
@@ -105,13 +110,14 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
 
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         title: Text(
-          'Chat AI Gmail',
+          l.t('gmail_ai_chat_title'),
           style: TextStyle(
             color: onSurface,
             fontWeight: FontWeight.w600,
@@ -138,8 +144,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
               ],
             ),
             child: Text(
-              'Chatbot này dùng để hỏi chung về Gmail: cách sử dụng, quản lý hộp thư, bảo mật tài khoản, '
-              'nhận diện spam/phishing nói chung... Nếu muốn phân tích một email cụ thể, hãy dùng AI trong màn chi tiết email.',
+              l.t('gmail_ai_chat_intro'),
               style: TextStyle(
                 fontSize: 14,
                 color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -216,7 +221,7 @@ class _GmailAiChatScreenState extends State<GmailAiChatScreen> {
                       maxLines: 4,
                       textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
-                        hintText: 'Hỏi AI về cách dùng Gmail, bảo mật, spam/phishing...',
+                        hintText: l.t('gmail_ai_chat_input_hint'),
                         filled: true,
                         fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(

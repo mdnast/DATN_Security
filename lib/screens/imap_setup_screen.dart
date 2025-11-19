@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_localizations.dart';
 import '../services/gmail_service.dart';
 
 class ImapSetupScreen extends StatefulWidget {
@@ -71,9 +72,9 @@ class _ImapSetupScreenState extends State<ImapSetupScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: const Color(0xFF4285F4),
-        title: const Text(
-          'Kết nối Gmail',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        title: Text(
+          AppLocalizations.of(context).t('email_list_setup_title'),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

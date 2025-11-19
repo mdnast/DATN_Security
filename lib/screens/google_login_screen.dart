@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/guardmail_logo.dart';
+import '../localization/app_localizations.dart';
+import '../services/locale_service.dart';
+import '../services/theme_service.dart';
 
 class GoogleLoginScreen extends StatefulWidget {
   const GoogleLoginScreen({super.key});
@@ -15,6 +18,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
   String? _errorMessage;
 
   Future<void> _handleGoogleSignIn() async {
+    final l = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -27,13 +31,15 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
         Navigator.pushReplacementNamed(context, '/home');
       } else if (mounted) {
         setState(() {
-          _errorMessage = 'Đăng nhập bị hủy';
+          _errorMessage = l.t('login_cancelled');
         });
       }
     } catch (error) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Lỗi đăng nhập: ${error.toString()}';
+          _errorMessage = l
+              .t('login_error_with_message')
+              .replaceFirst('{message}', error.toString());
         });
       }
     } finally {
@@ -47,8 +53,14 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = theme.colorScheme.surface;
+
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -56,7 +68,43 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                if (!_isLoading)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: l.t('settings_language_title'),
+                            icon: const Icon(Icons.language),
+                            onPressed: () {
+                              final currentCode =
+                                  Localizations.localeOf(context).languageCode;
+                              final nextLocale = currentCode == 'vi'
+                                  ? const Locale('en')
+                                  : const Locale('vi');
+                              LocaleService().setLocale(nextLocale);
+                            },
+                          ),
+                          IconButton(
+                            tooltip: isDark
+                                ? l.t('theme_toggle_to_light')
+                                : l.t('theme_toggle_to_dark'),
+                            icon: Icon(
+                              isDark ? Icons.light_mode : Icons.dark_mode,
+                            ),
+                            onPressed: () async {
+                              // Toggle trực tiếp giữa sáng/tối
+                              await ThemeService().toggleDark(!isDark);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 8),
                 const GuardMailLogo(
                   size: 80,
                   showTitle: true,
@@ -65,11 +113,12 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'WardMail bảo vệ Gmail khỏi email lừa đảo và phishing',
+                  l.t('login_subtitle'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: theme.textTheme.bodyMedium?.color
+                        ?.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -78,9 +127,13 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: isDark
+                          ? Colors.red.withOpacity(0.15)
+                          : Colors.red[50],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red[200]!),
+                      border: Border.all(
+                        color: isDark ? Colors.red[700]! : Colors.red[200]!,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -89,7 +142,11 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                         Expanded(
                           child: Text(
                             _errorMessage!,
-                            style: TextStyle(color: Colors.red[700]),
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.red[200]
+                                  : Colors.red[700],
+                            ),
                           ),
                         ),
                       ],
@@ -105,15 +162,21 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                             width: double.infinity,
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
+                              color: surfaceColor,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFDADCE0), width: 1),
+                              border: Border.all(
+                                color: isDark
+                                    ? theme.dividerColor
+                                    : const Color(0xFFDADCE0),
+                                width: 1,
+                              ),
                               boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.06),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
+                                if (!isDark)
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
                               ],
                             ),
                             child: ElevatedButton.icon(
@@ -128,13 +191,15 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                               ),
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Text(
-                                    'Đăng nhập bằng ',
+                                    '${l.t('login_with')} ',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF3C4043),
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF3C4043),
                                     ),
                                   ),
                                   Text(
@@ -188,7 +253,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                                 ],
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.surface,
+                                backgroundColor: surfaceColor,
                                 elevation: 0,
                                 shadowColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(
@@ -200,15 +265,26 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                           const SizedBox(height: 20),
                           Row(
                             children: [
-                              Expanded(child: Divider(color: Colors.grey[300])),
+                              Expanded(
+                                child: Divider(
+                                  color: theme.dividerColor,
+                                ),
+                              ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
-                                  'hoặc',
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  l.t('login_or'),
+                                  style: TextStyle(
+                                    color: theme.textTheme.bodySmall?.color
+                                        ?.withOpacity(0.7),
+                                  ),
                                 ),
                               ),
-                              Expanded(child: Divider(color: Colors.grey[300])),
+                              Expanded(
+                                child: Divider(
+                                  color: theme.dividerColor,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -233,9 +309,9 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                                 Navigator.pushNamed(context, '/email-login');
                               },
                               icon: const Icon(Icons.email_outlined, color: Colors.white),
-                              label: const Text(
-                                'Đăng nhập bằng Email',
-                                style: TextStyle(
+                              label: Text(
+                                l.t('login_email'),
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -256,16 +332,19 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Bạn chưa có tài khoản? ',
-                                style: TextStyle(color: Colors.grey[600]),
+                                l.t('login_no_account'),
+                                style: TextStyle(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withOpacity(0.7),
+                                ),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pushNamed(context, '/email-register');
                                 },
-                                child: const Text(
-                                  'Đăng ký bằng Email',
-                                  style: TextStyle(
+                                child: Text(
+                                  l.t('login_register_email'),
+                                  style: const TextStyle(
                                     color: Color(0xFF4285F4),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/email_message.dart';
 import '../services/email_analysis_service.dart';
+import '../localization/app_localizations.dart';
 
 class EmailAiChatScreen extends StatefulWidget {
   final EmailMessage email;
@@ -18,11 +19,11 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
 
   final List<_ChatMessage> _messages = [];
   bool _isSending = false;
-  final List<String> _suggestedQuestions = const [
-    'Email này có đáng tin không?',
-    'Email này có dấu hiệu lừa đảo không?',
-    'Tóm tắt nội dung email giúp tôi.',
-    'Tôi nên làm gì với email này?',
+  final List<String> _suggestedQuestionKeys = const [
+    'email_ai_suggestion_1',
+    'email_ai_suggestion_2',
+    'email_ai_suggestion_3',
+    'email_ai_suggestion_4',
   ];
 
   @override
@@ -53,11 +54,15 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _messages.add(_ChatMessage(
-          text: 'Không thể kết nối tới AI: ${e.toString()}',
-          isUser: false,
-          isError: true,
-        ));
+        _messages.add(
+          _ChatMessage(
+            text: AppLocalizations.of(context)
+                .t('gmail_ai_chat_error')
+                .replaceFirst('{error}', e.toString()),
+            isUser: false,
+            isError: true,
+          ),
+        );
       });
       _scrollToBottom();
     } finally {
@@ -82,6 +87,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final onSurface = Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF202124);
 
     final email = widget.email;
@@ -91,7 +97,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         title: Text(
-          'Hỏi AI về email',
+          l.t('email_detail_ask_ai_tooltip'),
           style: TextStyle(
             color: onSurface,
             fontWeight: FontWeight.w600,
@@ -167,10 +173,11 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _suggestedQuestions.length,
+              itemCount: _suggestedQuestionKeys.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
-                final q = _suggestedQuestions[index];
+                final key = _suggestedQuestionKeys[index];
+                final q = l.t(key);
                 return ActionChip(
                   label: Text(
                     q,
@@ -251,7 +258,7 @@ class _EmailAiChatScreenState extends State<EmailAiChatScreen> {
                       maxLines: 4,
                       textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
-                        hintText: 'Hỏi AI về email này...',
+                        hintText: l.t('email_detail_ask_ai_tooltip'),
                         filled: true,
                         fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(

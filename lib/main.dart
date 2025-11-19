@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/background_email_service.dart';
 import 'services/auto_start_service.dart';
 import 'services/theme_service.dart';
+import 'services/locale_service.dart';
+import 'localization/app_localizations.dart';
 import 'screens/auth_wrapper.dart';
 import 'screens/google_login_screen.dart';
 import 'screens/home_screen.dart';
@@ -37,6 +40,9 @@ void main() async {
   // Load theme mode đã lưu
   await ThemeService().loadTheme();
 
+  // Load locale đã lưu
+  await LocaleService().loadLocale();
+
   runApp(const MyApp());
 }
 
@@ -48,22 +54,35 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService().themeMode,
       builder: (context, mode, _) {
-        return MaterialApp(
-          navigatorKey: navigatorKey, // ✅ Set navigator key
-          title: 'Phát hiện Phishing',
-          debugShowCheckedModeBanner: false,
-          themeMode: mode,
-          theme: _buildLightTheme(),
-          darkTheme: _buildDarkTheme(),
-          initialRoute: '/',
-          routes: {
-            '/': (context) => const AuthWrapper(),
-            '/login': (context) => const GoogleLoginScreen(),
-            '/home': (context) => const HomeScreen(),
-            '/email-register': (context) => const EmailRegisterScreen(),
-            '/email-login': (context) => const EmailLoginScreen(),
-            '/email-verification': (context) => const EmailVerificationScreen(),
-            '/biometric-lock': (context) => const BiometricLockScreen(),
+        return ValueListenableBuilder<Locale?>(
+          valueListenable: LocaleService().locale,
+          builder: (context, appLocale, _) {
+            return MaterialApp(
+              navigatorKey: navigatorKey,
+              title: 'WardMail',
+              debugShowCheckedModeBanner: false,
+              themeMode: mode,
+              theme: _buildLightTheme(),
+              darkTheme: _buildDarkTheme(),
+              locale: appLocale,
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              initialRoute: '/',
+              routes: {
+                '/': (context) => const AuthWrapper(),
+                '/login': (context) => const GoogleLoginScreen(),
+                '/home': (context) => const HomeScreen(),
+                '/email-register': (context) => const EmailRegisterScreen(),
+                '/email-login': (context) => const EmailLoginScreen(),
+                '/email-verification': (context) => const EmailVerificationScreen(),
+                '/biometric-lock': (context) => const BiometricLockScreen(),
+              },
+            );
           },
         );
       },

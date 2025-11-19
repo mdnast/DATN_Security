@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart';
+import '../localization/app_localizations.dart';
 
 class RecaptchaWidget extends StatefulWidget {
   final ValueChanged<String> onVerified;
@@ -32,6 +33,7 @@ class _RecaptchaWidgetState extends State<RecaptchaWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isVerified = _token != null && _token!.isNotEmpty;
 
     return OutlinedButton.icon
@@ -42,7 +44,9 @@ class _RecaptchaWidgetState extends State<RecaptchaWidget> {
         color: isVerified ? Colors.green : const Color(0xFF4285F4),
       ),
       label: Text(
-        isVerified ? 'Đã xác minh reCAPTCHA' : 'Tôi không phải người máy',
+        isVerified
+            ? l.t('recaptcha_verified')
+            : l.t('recaptcha_not_robot'),
         style: const TextStyle(fontSize: 14),
       ),
       style: OutlinedButton.styleFrom(
@@ -103,9 +107,10 @@ class _RecaptchaFullScreenPageState extends State<_RecaptchaFullScreenPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Xác minh reCAPTCHA'),
+        title: Text(l.t('recaptcha_title')),
       ),
       body: Stack(
         children: [

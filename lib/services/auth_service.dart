@@ -2,6 +2,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'notification_service.dart';
+import 'theme_service.dart';
+import 'locale_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -56,6 +59,25 @@ class AuthService {
   Future<void> _saveUserData(Map<String, dynamic> userData) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_data', jsonEncode(userData));
+
+    // Giữ lại locale & theme hiện tại (có thể user vừa chọn ở màn login)
+    final currentLocale = LocaleService().locale.value;
+    final currentTheme = ThemeService().themeMode.value;
+
+    // Reload dữ liệu theo từng user (thông báo, theme, locale)
+    await NotificationService().reloadForCurrentUser();
+
+    // Theme: nếu user vừa chọn theme, ưu tiên dùng theme đó cho user mới
+    await ThemeService().loadTheme();
+    if (currentTheme != ThemeService().themeMode.value) {
+      await ThemeService().setThemeMode(currentTheme);
+    }
+
+    // Locale: nếu user vừa chọn language, lưu lại cho user mới
+    await LocaleService().loadLocale();
+    if (currentLocale != null) {
+      await LocaleService().setLocale(currentLocale);
+    }
   }
 
   Future<Map<String, dynamic>?> getCurrentUser() async {

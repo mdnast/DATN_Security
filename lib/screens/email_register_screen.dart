@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/recaptcha_service.dart';
 import '../widgets/guardmail_logo.dart';
+import '../localization/app_localizations.dart';
 
 class EmailRegisterScreen extends StatefulWidget {
   const EmailRegisterScreen({super.key});
@@ -52,6 +53,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    final l = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -65,8 +67,8 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
       if (_recaptchaToken == null || _recaptchaToken!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Không xác minh được reCAPTCHA, vui lòng thử lại'),
+            SnackBar(
+              content: Text(l.t('recaptcha_not_verified_snackbar')),
               backgroundColor: Colors.red,
             ),
           );
@@ -88,20 +90,22 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      String errorMsg = 'Đã xảy ra lỗi';
+      String errorMsg = l.t('error_generic');
       
       switch (e.code) {
         case 'email-already-in-use':
-          errorMsg = 'Email này đã được đăng ký';
+          errorMsg = l.t('error_email_already_in_use');
           break;
         case 'invalid-email':
-          errorMsg = 'Email không hợp lệ';
+          errorMsg = l.t('error_invalid_email');
           break;
         case 'weak-password':
-          errorMsg = 'Mật khẩu quá yếu';
+          errorMsg = l.t('error_weak_password');
           break;
         default:
-          errorMsg = 'Lỗi: ${e.message}';
+          errorMsg = l
+              .t('error_with_message')
+              .replaceFirst('{message}', e.message ?? '');
       }
 
       if (mounted) {
@@ -112,7 +116,9 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
     } catch (error) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Lỗi đăng ký: ${error.toString()}';
+          _errorMessage = l
+              .t('error_with_message')
+              .replaceFirst('{message}', error.toString());
         });
       }
     } finally {
@@ -126,13 +132,23 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final inputFillColor = isDark
+        ? theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface
+        : const Color(0xFFF8F9FA);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5F6368)),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: theme.appBarTheme.iconTheme?.color,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -157,11 +173,12 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tạo tài khoản mới để tiếp tục',
+                    l.t('register_title'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: theme.textTheme.bodySmall?.color
+                          ?.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -170,9 +187,13 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                       padding: const EdgeInsets.all(12),
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: Colors.red[50],
+                        color: isDark
+                            ? Colors.red.withOpacity(0.15)
+                            : Colors.red[50],
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
+                        border: Border.all(
+                          color: isDark ? Colors.red[700]! : Colors.red[200]!,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -190,10 +211,13 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                   TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      labelText: 'Họ và tên',
-                      prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF5F6368)),
+                      labelText: l.t('name_field'),
+                      prefixIcon: Icon(
+                        Icons.person_outline,
+                        color: theme.iconTheme.color?.withOpacity(0.8),
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: inputFillColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -209,7 +233,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập họ tên';
+                        return l.t('validation_enter_name');
                       }
                       return null;
                     },
@@ -219,10 +243,13 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF5F6368)),
+                      labelText: l.t('email_field'),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: theme.iconTheme.color?.withOpacity(0.8),
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: inputFillColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -238,10 +265,10 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập email';
+                        return l.t('validation_enter_email');
                       }
                       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Email không hợp lệ';
+                        return l.t('validation_email_invalid');
                       }
                       return null;
                     },
@@ -251,12 +278,15 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Mật khẩu',
-                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
+                      labelText: l.t('password_field'),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: theme.iconTheme.color?.withOpacity(0.8),
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: const Color(0xFF5F6368),
+                          color: theme.iconTheme.color?.withOpacity(0.8),
                         ),
                         onPressed: () {
                           setState(() {
@@ -265,7 +295,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                         },
                       ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: inputFillColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -286,10 +316,10 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
+                        return l.t('validation_enter_password');
                       }
                       if (value.length < 8) {
-                        return 'Mật khẩu phải có ít nhất 8 ký tự';
+                        return l.t('validation_password_min_length');
                       }
                       final hasUpper = RegExp(r'[A-Z]').hasMatch(value);
                       final hasLower = RegExp(r'[a-z]').hasMatch(value);
@@ -297,7 +327,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                       final hasSpecial = RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value);
 
                       if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
-                        return 'Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt';
+                        return l.t('validation_password_requirements');
                       }
                       return null;
                     },
@@ -315,13 +345,13 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
 
                       if (_passwordStrength < 0.4) {
                         color = Colors.red;
-                        label = 'Mật khẩu yếu';
+                        label = l.t('password_strength_weak');
                       } else if (_passwordStrength < 0.8) {
                         color = Colors.orange;
-                        label = 'Mật khẩu trung bình';
+                        label = l.t('password_strength_medium');
                       } else {
                         color = Colors.green;
-                        label = 'Mật khẩu mạnh';
+                        label = l.t('password_strength_strong');
                       }
 
                       return Column(
@@ -350,12 +380,15 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
-                      labelText: 'Xác nhận mật khẩu',
-                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF5F6368)),
+                      labelText: l.t('confirm_password_field'),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: theme.iconTheme.color?.withOpacity(0.8),
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: const Color(0xFF5F6368),
+                          color: theme.iconTheme.color?.withOpacity(0.8),
                         ),
                         onPressed: () {
                           setState(() {
@@ -364,7 +397,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                         },
                       ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: inputFillColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -380,10 +413,10 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng xác nhận mật khẩu';
+                        return l.t('validation_enter_password_confirm');
                       }
                       if (value != _passwordController.text) {
-                        return 'Mật khẩu không khớp';
+                        return l.t('validation_password_mismatch');
                       }
                       return null;
                     },
@@ -432,9 +465,9 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Đăng ký',
-                              style: TextStyle(
+                          : Text(
+                              l.t('register_button'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -447,16 +480,19 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Đã có tài khoản? ',
-                        style: TextStyle(color: Colors.grey[600]),
+                        l.t('has_account'),
+                        style: TextStyle(
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withOpacity(0.7),
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushReplacementNamed(context, '/email-login');
                         },
-                        child: const Text(
-                          'Đăng nhập',
-                          style: TextStyle(
+                        child: Text(
+                          l.t('login_here'),
+                          style: const TextStyle(
                             color: Color(0xFF4285F4),
                             fontWeight: FontWeight.w600,
                           ),

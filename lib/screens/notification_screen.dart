@@ -7,6 +7,7 @@ import '../models/email_message.dart';
 import '../services/notification_service.dart';
 import '../services/gmail_service.dart';
 import 'email_detail_screen.dart';
+import '../localization/app_localizations.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -39,19 +40,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _handleDelete(String id) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa thông báo'),
-        content: const Text('Bạn có chắc chắn muốn xóa thông báo này?'),
+        title: Text(l.t('notifications_delete_title')),
+        content: Text(l.t('notifications_delete_message')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(l.t('notifications_action_cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l.t('notifications_action_delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -78,7 +83,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
       // Kiểm tra xem notification có email data không
       if (notification.data == null || notification.data!['email_id'] == null) {
         print('⚠️ No email data in notification');
-        _showErrorSnackbar('Không thể mở email này');
+        _showErrorSnackbar(
+          AppLocalizations.of(context)
+              .t('email_list_error_cannot_open_email'),
+        );
         return;
       }
 
@@ -201,7 +209,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
         Navigator.pop(context);
       }
       
-      _showErrorSnackbar('Không thể mở email: ${e.toString()}');
+      _showErrorSnackbar(
+        AppLocalizations.of(context)
+            .t('notifications_error_open_email')
+            .replaceFirst('{error}', e.toString()),
+      );
     }
   }
 
@@ -218,19 +230,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _handleClearAll() async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa tất cả'),
-        content: const Text('Bạn có chắc chắn muốn xóa tất cả thông báo?'),
+        title: Text(l.t('notifications_delete_all_title')),
+        content: Text(l.t('notifications_delete_all_message')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(l.t('notifications_action_cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l.t('notifications_action_delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -273,17 +289,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   String _getRelativeTime(DateTime timestamp) {
+    final l = AppLocalizations.of(context);
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
     if (difference.inMinutes < 1) {
-      return 'Vừa xong';
+      return l.t('notifications_relative_just_now');
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes} phút trước';
+      return l
+          .t('notifications_relative_minutes_ago')
+          .replaceFirst('{minutes}', difference.inMinutes.toString());
     } else if (difference.inDays < 1) {
-      return '${difference.inHours} giờ trước';
+      return l
+          .t('notifications_relative_hours_ago')
+          .replaceFirst('{hours}', difference.inHours.toString());
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} ngày trước';
+      return l
+          .t('notifications_relative_days_ago')
+          .replaceFirst('{days}', difference.inDays.toString());
     } else {
       return DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
     }
@@ -291,31 +314,33 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l = AppLocalizations.of(context);
     final unreadCount = _notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Thông báo',
-              style: TextStyle(
-                color: Color(0xFF202124),
+            Text(
+              l.t('notifications_title'),
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 20,
               ),
             ),
             if (unreadCount > 0)
               Text(
-                '$unreadCount chưa đọc',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
+                l
+                    .t('notifications_unread_count')
+                    .replaceFirst('{count}', unreadCount.toString()),
+                style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.normal,
+                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
                 ),
               ),
           ],
@@ -325,18 +350,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
             if (unreadCount > 0)
               TextButton(
                 onPressed: _handleMarkAllAsRead,
-                child: const Text('Đánh dấu đã đọc'),
+                child: Text(l.t('notifications_action_mark_read')),
               ),
             PopupMenuButton(
               icon: const Icon(Icons.more_vert),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'clear',
                   child: Row(
                     children: [
                       Icon(Icons.delete_outline, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Xóa tất cả'),
+                      Text(l.t('notifications_action_clear_all')),
                     ],
                   ),
                 ),
@@ -358,24 +383,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   Icon(
                     Icons.notifications_none,
                     size: 80,
-                    color: Colors.grey[400],
+                    color: theme.colorScheme.onBackground.withOpacity(0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Chưa có thông báo',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
+                l.t('notifications_empty_title'),
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Các thông báo về email và bảo mật\nsẽ hiển thị ở đây',
+                l.t('notifications_empty_body'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -442,14 +464,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       margin: const EdgeInsets.symmetric(
                           vertical: 4, horizontal: 8),
                       color: notification.isRead
-                          ? Colors.white
-                          : Colors.blue[50],
+                          ? theme.cardColor
+                          : (isDark
+                              ? theme.colorScheme.primary.withOpacity(0.15)
+                              : Colors.blue[50]),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
                           color: notification.isRead
-                              ? Colors.grey[200]!
-                              : Colors.blue[100]!,
+                              ? theme.dividerColor
+                              : (isDark
+                                  ? theme.colorScheme.primary
+                                  : Colors.blue[100]!),
                           width: 1,
                         ),
                       ),
@@ -496,7 +522,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                               fontWeight: notification.isRead
                                                   ? FontWeight.w500
                                                   : FontWeight.bold,
-                                              color: Colors.grey[900],
+                                              color: theme
+                                                  .textTheme.titleSmall?.color,
                                             ),
                                           ),
                                         ),
@@ -516,7 +543,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                       notification.body,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.grey[700],
+                                        color: theme.textTheme.bodyMedium?.color
+                                            ?.withOpacity(0.8),
                                       ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -531,13 +559,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                               notification.timestamp),
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey[500],
+                                            color: theme
+                                                .textTheme.bodySmall?.color
+                                                ?.withOpacity(0.7),
                                           ),
                                         ),
                                         IconButton(
                                           icon: const Icon(Icons.delete_outline,
                                               size: 20),
-                                          color: Colors.grey[500],
+                                          color: theme.iconTheme.color
+                                              ?.withOpacity(0.7),
                                           onPressed: () =>
                                               _handleDelete(notification.id),
                                           padding: EdgeInsets.zero,

@@ -16,6 +16,8 @@ class GuardMailLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final logo = _buildLogoMark();
 
     if (!showTitle) return logo;
@@ -34,7 +36,7 @@ class GuardMailLogo extends StatelessWidget {
                 fontSize: titleFontSize,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: const Color(0xFF202124),
+                color: isDark ? Colors.white : const Color(0xFF202124),
               ),
             ),
             Text(
