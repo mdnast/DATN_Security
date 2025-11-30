@@ -6,11 +6,14 @@ import 'gemini_analysis_service.dart';
 class EmailAnalysisService {
   final GeminiAnalysisService _geminiService = GeminiAnalysisService();
 
-  Future<ScanResult> analyzeEmail(EmailMessage email) async {
+  Future<ScanResult> analyzeEmail(
+    EmailMessage email, {
+    String? userFeedback,
+  }) async {
     final threats = <String>[];
     double riskScore = 0.0;
     String result = 'unknown';
-    
+
     // Kết quả Gemini
     GeminiAnalysisResult? geminiResult;
     final senderDomain = _extractDomain(email.from);
@@ -20,6 +23,9 @@ class EmailAnalysisService {
       print('STARTING EMAIL ANALYSIS');
       print('From: ${email.from}');
       print('Subject: ${email.subject}');
+      if (userFeedback != null) {
+        print('User Feedback: $userFeedback');
+      }
       print('========================================');
       // Chuẩn bị nội dung email (có giới hạn độ dài để tiết kiệm token)
       print('Step 1: Preparing email content...');
@@ -31,6 +37,7 @@ class EmailAnalysisService {
         subject: email.subject,
         body: truncatedBody,
         from: email.from,
+        userFeedback: userFeedback,
       );
       print('Gemini analysis complete!');
       print('Risk Score: ${geminiResult.riskScore}');
@@ -40,7 +47,6 @@ class EmailAnalysisService {
       riskScore = geminiResult.riskScore / 100.0;
       result = geminiResult.classification;
       threats.addAll(geminiResult.phishingIndicators);
-      
     } catch (e, stackTrace) {
       // Nếu Gemini lỗi, trả về kết quả unknown với thông tin chi tiết
       print('========================================');
@@ -48,21 +54,25 @@ class EmailAnalysisService {
       print('Error: $e');
       print('Stack trace: $stackTrace');
       print('========================================');
-      
+
       riskScore = 0.5;
       result = 'unknown';
-      
+
       // Thêm error message chi tiết để debug
       String errorMessage = 'Lỗi phân tích AI';
       if (e.toString().contains('API')) {
         errorMessage = 'Lỗi API Gemini - kiểm tra API key';
-      } else if (e.toString().contains('JSON') || e.toString().contains('Format')) {
+      } else if (e.toString().contains('JSON') ||
+          e.toString().contains('Format')) {
         errorMessage = 'Lỗi định dạng JSON từ AI';
-      } else if (e.toString().contains('network') || e.toString().contains('connect')) {
+      } else if (e.toString().contains('network') ||
+          e.toString().contains('connect')) {
         errorMessage = 'Lỗi kết nối mạng';
       }
-      
-      threats.add('$errorMessage: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}');
+
+      threats.add(
+        '$errorMessage: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}',
+      );
     }
 
     // Đảm bảo riskScore trong khoảng 0-1
@@ -72,9 +82,7 @@ class EmailAnalysisService {
     // - Nếu riskScore = 0.1 (10% nguy hiểm = rất an toàn) → confidence = 90% an toàn
     // - Nếu riskScore = 0.9 (90% nguy hiểm) → confidence = 90% nguy hiểm
     // Logic: Nếu < 50% thì đảo ngược (1 - riskScore), nếu >= 50% giữ nguyên
-    final confidenceScore = riskScore >= 0.5 
-        ? riskScore 
-        : 1.0 - riskScore;
+    final confidenceScore = riskScore >= 0.5 ? riskScore : 1.0 - riskScore;
 
     // Tạo analysis details
     final analysisDetails = {

@@ -63,7 +63,13 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
     setState(() => _isAnalyzing = true);
 
     try {
-      final result = await _analysisService.analyzeEmail(widget.email);
+      // Lấy feedback từ controller nếu có
+      final feedback = _feedbackController.text.trim();
+
+      final result = await _analysisService.analyzeEmail(
+        widget.email,
+        userFeedback: feedback.isNotEmpty ? feedback : null,
+      );
 
       await _scanHistoryService.saveScanResult(result);
 
@@ -107,15 +113,23 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         setState(() {
           _scanResult = result;
         });
-      }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l.t('email_detail_analysis_done')),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // Nếu có feedback, thông báo đã re-analyze với feedback
+        if (feedback.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã phân tích lại dựa trên phản hồi của bạn'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l.t('email_detail_analysis_done')),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -423,7 +437,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         border: Border.all(color: statusColor, width: 2),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withValues(alpha: 0.2),
+            color: statusColor.withOpacity(0.2),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -438,7 +452,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
+                  color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(statusIcon, color: statusColor, size: 28),
@@ -474,7 +488,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.05),
+              color: statusColor.withOpacity(0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -751,7 +765,7 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
