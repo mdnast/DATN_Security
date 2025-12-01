@@ -39,35 +39,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
     _loadNotifications();
   }
 
-  Future<void> _handleDelete(String id) async {
-    final l = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l.t('notifications_delete_title')),
-        content: Text(l.t('notifications_delete_message')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l.t('notifications_action_cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              l.t('notifications_action_delete'),
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await _notificationService.deleteNotification(id);
-      _loadNotifications();
-    }
-  }
-
   Future<void> _handleMarkAllAsRead() async {
     await _notificationService.markAllAsRead();
     _loadNotifications();
@@ -79,36 +50,34 @@ class _NotificationScreenState extends State<NotificationScreen> {
       print('=== NOTIFICATION TAPPED IN LIST ===');
       print('Type: ${notification.type}');
       print('Data: ${notification.data}');
-      
+
       // Kiểm tra xem notification có email data không
       if (notification.data == null || notification.data!['email_id'] == null) {
         print('⚠️ No email data in notification');
         _showErrorSnackbar(
-          AppLocalizations.of(context)
-              .t('email_list_error_cannot_open_email'),
+          AppLocalizations.of(context).t('email_list_error_cannot_open_email'),
         );
         return;
       }
 
       final emailId = notification.data!['email_id'];
       print('Email ID: $emailId');
-      
+
       // Hiển thị loading
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
-      
+
       EmailMessage? email;
-      
+
       // 1. Thử load từ cache trước
       final emailCacheJson = await _storage.read(key: 'email_cache_$emailId');
-      
+
       if (emailCacheJson != null) {
         print('✅ Email found in cache');
         final emailData = jsonDecode(emailCacheJson);
@@ -123,16 +92,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
         );
       } else {
         print('⚠️ Email not in cache, fetching from Gmail...');
-        
+
         // 2. Nếu không có cache, fetch từ Gmail
         try {
           final gmailEmails = await _gmailService.fetchEmails(maxResults: 50);
-          final foundEmail = gmailEmails.where((e) => e.id == emailId).firstOrNull;
-          
+          final foundEmail = gmailEmails
+              .where((e) => e.id == emailId)
+              .firstOrNull;
+
           if (foundEmail != null) {
             print('✅ Email fetched from Gmail');
             email = foundEmail;
-            
+
             // Lưu vào cache cho lần sau
             final emailJson = jsonEncode({
               'id': email.id,
@@ -153,11 +124,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
               from: notification.data!['from'] ?? 'Unknown',
               subject: notification.data!['subject'] ?? 'No subject',
               snippet: notification.data!['snippet'] ?? notification.body,
-              body: notification.data!['body'] ?? notification.data!['snippet'] ?? '',
+              body:
+                  notification.data!['body'] ??
+                  notification.data!['snippet'] ??
+                  '',
               date: DateTime.parse(
-                notification.data!['date'] ?? 
-                notification.data!['timestamp'] ?? 
-                DateTime.now().toIso8601String()
+                notification.data!['date'] ??
+                    notification.data!['timestamp'] ??
+                    DateTime.now().toIso8601String(),
               ),
               photoUrl: notification.data!['photoUrl'],
             );
@@ -171,11 +145,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
             from: notification.data!['from'] ?? 'Unknown',
             subject: notification.data!['subject'] ?? 'No subject',
             snippet: notification.data!['snippet'] ?? notification.body,
-            body: notification.data!['body'] ?? notification.data!['snippet'] ?? '',
+            body:
+                notification.data!['body'] ??
+                notification.data!['snippet'] ??
+                '',
             date: DateTime.parse(
-              notification.data!['date'] ?? 
-              notification.data!['timestamp'] ?? 
-              DateTime.now().toIso8601String()
+              notification.data!['date'] ??
+                  notification.data!['timestamp'] ??
+                  DateTime.now().toIso8601String(),
             ),
             photoUrl: notification.data!['photoUrl'],
           );
@@ -189,7 +166,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       }
 
       print('✅ Navigating to EmailDetailScreen...');
-      
+
       // Navigate đến EmailDetailScreen
       if (mounted && email != null) {
         await Navigator.push(
@@ -203,12 +180,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
     } catch (e, stackTrace) {
       print('❌ Error handling notification tap: $e');
       print('Stack trace: $stackTrace');
-      
+
       // Đóng loading nếu đang mở
       if (mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-      
+
       _showErrorSnackbar(
         AppLocalizations.of(context)
             .t('notifications_error_open_email')
@@ -387,17 +364,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                l.t('notifications_empty_title'),
+                    l.t('notifications_empty_title'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                l.t('notifications_empty_body'),
+                    l.t('notifications_empty_body'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                        0.7,
+                      ),
                     ),
                   ),
                 ],
@@ -408,7 +387,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 _loadNotifications();
               },
               child: ListView.builder(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: _notifications.length,
                 itemBuilder: (context, index) {
                   final notification = _notifications[index];
@@ -419,10 +398,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     key: Key(notification.id),
                     background: Container(
                       margin: const EdgeInsets.symmetric(
-                          vertical: 4, horizontal: 8),
+                        vertical: 4,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.only(left: 20),
@@ -434,10 +415,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     ),
                     secondaryBackground: Container(
                       margin: const EdgeInsets.symmetric(
-                          vertical: 4, horizontal: 8),
+                        vertical: 4,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
@@ -459,127 +442,127 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       _notificationService.deleteNotification(notification.id);
                       _loadNotifications();
                     },
-                    child: Card(
-                      elevation: notification.isRead ? 0 : 2,
+                    child: Container(
                       margin: const EdgeInsets.symmetric(
-                          vertical: 4, horizontal: 8),
-                      color: notification.isRead
-                          ? theme.cardColor
-                          : (isDark
-                              ? theme.colorScheme.primary.withOpacity(0.15)
-                              : Colors.blue[50]),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: notification.isRead
-                              ? theme.dividerColor
-                              : (isDark
-                                  ? theme.colorScheme.primary
-                                  : Colors.blue[100]!),
-                          width: 1,
-                        ),
+                        vertical: 4,
+                        horizontal: 12,
                       ),
-                      child: InkWell(
-                        onTap: () async {
-                          // Mark as read
-                          if (!notification.isRead) {
-                            await _handleMarkAsRead(notification.id);
-                          }
-                          
-                          // ✅ NAVIGATE ĐẾN EMAIL DETAIL
-                          await _handleNotificationTap(notification);
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: color.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                      decoration: BoxDecoration(
+                        color: notification.isRead
+                            ? theme.cardColor
+                            : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: notification.isRead
+                              ? Colors.transparent
+                              : (isDark
+                                    ? Colors.blue.withOpacity(0.3)
+                                    : Colors.blue.withOpacity(0.1)),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            if (!notification.isRead) {
+                              await _handleMarkAsRead(notification.id);
+                            }
+                            await _handleNotificationTap(notification);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: color.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(icon, color: color, size: 20),
                                 ),
-                                child: Icon(
-                                  icon,
-                                  color: color,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            notification.title,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              notification.title,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: notification.isRead
+                                                    ? FontWeight.w600
+                                                    : FontWeight.w700,
+                                                color: theme
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.color,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            _getRelativeTime(
+                                              notification.timestamp,
+                                            ),
                                             style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: notification.isRead
-                                                  ? FontWeight.w500
-                                                  : FontWeight.bold,
+                                              fontSize: 11,
                                               color: theme
-                                                  .textTheme.titleSmall?.color,
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.color
+                                                  ?.withOpacity(0.6),
                                             ),
                                           ),
-                                        ),
-                                        if (!notification.isRead)
-                                          Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: const BoxDecoration(
-                                              color: Colors.blue,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      notification.body,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: theme.textTheme.bodyMedium?.color
-                                            ?.withOpacity(0.8),
+                                        ],
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          _getRelativeTime(
-                                              notification.timestamp),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: theme
-                                                .textTheme.bodySmall?.color
-                                                ?.withOpacity(0.7),
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline,
-                                              size: 20),
-                                          color: theme.iconTheme.color
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        notification.body,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: theme
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.color
                                               ?.withOpacity(0.7),
-                                          onPressed: () =>
-                                              _handleDelete(notification.id),
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
+                                          height: 1.4,
                                         ),
-                                      ],
-                                    ),
-                                  ],
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                if (!notification.isRead) ...[
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 6),
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF4285F4),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
