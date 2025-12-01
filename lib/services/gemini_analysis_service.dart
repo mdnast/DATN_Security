@@ -214,6 +214,10 @@ Nếu thông tin chưa đủ để kết luận, hãy nói rõ điều đó.
           userFeedback: userFeedback,
         );
 
+        print('=== DEBUG: GENERATED PROMPT ===');
+        print(prompt);
+        print('===============================');
+
         print('Sending request to Gemini...');
         final response = await _model.generateContent([Content.text(prompt)]);
 
@@ -317,19 +321,33 @@ Quy tắc:
     final locale = LocaleService().locale.value ?? const Locale('vi');
     final isEnglish = locale.languageCode == 'en';
 
+    // Feedback section - Relaxed constraints, no "valid reason" required
     final feedbackSection = (userFeedback != null && userFeedback.isNotEmpty)
         ? (isEnglish
-              ? '\nUSER FEEDBACK: "$userFeedback"\n(Please consider this feedback in your analysis. If the user points out a valid safety concern or explains why it is safe, adjust the risk score accordingly.)\n'
-              : '\nPHẢN HỒI CỦA NGƯỜI DÙNG: "$userFeedback"\n(Hãy xem xét phản hồi này trong phân tích của bạn. Nếu người dùng chỉ ra mối lo ngại an toàn hợp lý hoặc giải thích tại sao nó an toàn, hãy điều chỉnh điểm rủi ro cho phù hợp.)\n')
+              ? '\n*** CRITICAL INSTRUCTION OVERRIDE ***\n'
+                    'USER FEEDBACK: "$userFeedback"\n'
+                    'INSTRUCTION: The user has explicitly reviewed this email. '
+                    'You MUST trust the user\'s judgment for this re-analysis. '
+                    'If the user says it is SAFE/NORMAL, set risk_score = 0 and risk_level = "Low". '
+                    'If the user says it is DANGEROUS/PHISHING, set risk_score = 100 and risk_level = "Critical". '
+                    'Ignore previous indicators if they contradict the user\'s explicit feedback.\n'
+              : '\n*** CHỈ DẪN ƯU TIÊN CAO NHẤT ***\n'
+                    'PHẢN HỒI CỦA NGƯỜI DÙNG: "$userFeedback"\n'
+                    'CHỈ DẪN: Người dùng đã trực tiếp xem xét email này. '
+                    'Bạn PHẢI tin tưởng đánh giá của người dùng trong lần phân tích lại này. '
+                    'Nếu người dùng bảo là AN TOÀN/BÌNH THƯỜNG, hãy đặt risk_score = 0 và risk_level = "Low". '
+                    'Nếu người dùng bảo là NGUY HIỂM/LỪA ĐẢO, hãy đặt risk_score = 100 và risk_level = "Critical". '
+                    'Bỏ qua các dấu hiệu nghi ngờ trước đó nếu chúng mâu thuẫn với phản hồi của người dùng.\n')
         : '';
 
     return isEnglish
         ? '''
-Analyze the email for phishing indicators and ONLY return ONE valid JSON object (no markdown, no explanatory text).
+Analyze the email for phishing indicators and ONLY return ONE valid JSON object.
 
 FROM:$from
 SUBJECT:$subject
 BODY:$body
+
 $feedbackSection
 
 Example JSON (keep the keys, change the values):
@@ -348,16 +366,17 @@ Example JSON (keep the keys, change the values):
 }
 
 Rules:
-- risk_score: number 0–100 (0 safe, 100 very dangerous).
+- risk_score: number 0–100.
 - risk_level: one of "Low", "Medium", "High", "Critical".
 - Do not add any text outside the JSON.
 '''
         : '''
-Phân tích email có dấu hiệu phishing và CHỈ trả về MỘT JSON hợp lệ (không markdown, không text giải thích).
+Phân tích email có dấu hiệu phishing và CHỈ trả về MỘT JSON hợp lệ.
 
 FROM:$from
 SUBJECT:$subject
 BODY:$body
+
 $feedbackSection
 
 JSON mẫu (giữ nguyên key, thay giá trị):
@@ -376,7 +395,7 @@ JSON mẫu (giữ nguyên key, thay giá trị):
 }
 
 Quy tắc:
-- risk_score: số 0-100 (0 an toàn, 100 rất nguy hiểm).
+- risk_score: số 0-100.
 - risk_level: một trong "Low", "Medium", "High", "Critical".
 - Không thêm text ngoài JSON.
 ''';

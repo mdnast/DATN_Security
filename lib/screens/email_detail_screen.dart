@@ -679,21 +679,29 @@ class _EmailDetailScreenState extends State<EmailDetailScreen> {
                       return;
                     }
 
+                    // Save feedback to history/server
                     await _feedbackService.saveFeedback(
                       emailId: widget.email.id,
                       feedback: feedback,
                       analysisResult: _scanResult?.result ?? 'unknown',
                     );
 
-                    _feedbackController.clear();
+                    // DO NOT clear controller here, so re-analysis can use it
+                    // _feedbackController.clear();
 
                     if (!mounted) return;
+
+                    // Automatically trigger re-analysis with the feedback
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(l.t('feedback_submitted')),
                         backgroundColor: Colors.green,
+                        duration: const Duration(seconds: 1),
                       ),
                     );
+
+                    // Trigger re-analysis
+                    _analyzeEmail();
                   },
                   icon: const Icon(Icons.send, size: 16),
                   label: Text(
