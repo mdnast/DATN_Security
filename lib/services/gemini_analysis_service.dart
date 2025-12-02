@@ -397,7 +397,10 @@ Rules:
 - Do not add any text outside the JSON.
 '''
         : '''
+**QUAN TRỌNG: TRẢ LỜI HOÀN TOÀN BẰNG TIẾNG VIỆT**
+
 Phân tích email có dấu hiệu phishing và CHỈ trả về MỘT JSON hợp lệ.
+TẤT CẢ các trường text (summary, detailed_analysis, red_flags, recommendations) PHẢI viết bằng TIẾNG VIỆT.
 
 FROM:$from
 SUBJECT:$subject
@@ -445,6 +448,7 @@ Quy tắc:
   * logical_consistency: Nội dung có khớp với hoạt động gần đây? (VD: thông báo thanh toán cho dịch vụ không dùng)
   * technical_header_flags: Header email có bị giả mạo hoặc bất thường về kỹ thuật?
 - Không thêm text ngoài JSON.
+- **LƯU Ý QUAN TRỌNG: Viết TẤT CẢ phân tích, tóm tắt, lý do, khuyến nghị bằng TIẾNG VIỆT.**
 ''';
   }
 
