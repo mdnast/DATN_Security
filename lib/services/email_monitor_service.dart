@@ -24,10 +24,11 @@ class EmailMonitorService {
   Timer? _monitorTimer;
   List<String> _previousEmailIds = [];
   bool _isMonitoring = false;
-  
+
   static const String _lastCheckKey = 'email_monitor_last_check';
   static const String _emailIdsKey = 'email_monitor_ids';
-  static const int _checkIntervalSeconds = 30; // ✅ Check mỗi 1 PHÚT (nhanh và hợp lý)
+  static const int _checkIntervalSeconds =
+      30; // ✅ Check mỗi 1 PHÚT (nhanh và hợp lý)
 
   /// Bắt đầu theo dõi email mới
   Future<void> startMonitoring() async {
@@ -51,7 +52,9 @@ class EmailMonitorService {
       (timer) => _checkForNewEmails(),
     );
 
-    print('Email monitor started - checking every ${_checkIntervalSeconds ~/ 60} minutes');
+    print(
+      'Email monitor started - checking every ${_checkIntervalSeconds ~/ 60} minutes',
+    );
   }
 
   /// Dừng theo dõi email
@@ -68,10 +71,10 @@ class EmailMonitorService {
   Future<void> _checkForNewEmails() async {
     try {
       print('Checking for new emails...');
-      
+
       // Fetch emails mới nhất (chỉ lấy 20 email để tối ưu)
       final emails = await _gmailService.fetchEmails(maxResults: 20);
-      
+
       if (emails.isEmpty) {
         print('No emails found');
         return;
@@ -84,7 +87,7 @@ class EmailMonitorService {
 
       if (newEmails.isNotEmpty) {
         print('Found ${newEmails.length} new email(s)!');
-        
+
         for (var email in newEmails) {
           await _showNewEmailNotification(email);
         }
@@ -111,9 +114,7 @@ class EmailMonitorService {
   /// Gửi notification NGAY, phân tích sau (không blocking)
   Future<void> _showNewEmailNotification(EmailMessage email) async {
     final title = '📧 Email mới từ ${_extractSenderName(email.from)}';
-    final body = email.subject.isNotEmpty 
-        ? email.subject 
-        : 'Không có tiêu đề';
+    final body = email.subject.isNotEmpty ? email.subject : 'Không có tiêu đề';
 
     // ✅ GỬI NOTIFICATION NGAY (không đợi phân tích)
     await _notificationService.showNotification(
@@ -141,32 +142,43 @@ class EmailMonitorService {
   Future<void> _analyzeEmailSilently(EmailMessage email) async {
     try {
       print('🔍 Silent analysis started for: ${email.subject}');
-      
+
       final autoSettings = AutoAnalysisSettingsService();
       final autoEnabled = await autoSettings.isAutoAnalysisEnabled();
       if (!autoEnabled) {
-        print('ℹ️ Auto analysis disabled - skipping silent analysis for ${email.subject}');
+        print(
+          'ℹ️ Auto analysis disabled - skipping silent analysis for ${email.subject}',
+        );
         return;
       }
 
       final analysisService = EmailAnalysisService();
       final scanHistoryService = ScanHistoryService();
       final storage = const FlutterSecureStorage();
-      
+
       // Nếu email đã được phân tích (và không phải unknown) thì bỏ qua để tiết kiệm token
-      final latestScan = await scanHistoryService.getLatestScanForEmail(email.id);
+      final latestScan = await scanHistoryService.getLatestScanForEmail(
+        email.id,
+      );
       if (latestScan != null && latestScan.result != 'unknown') {
-        print('ℹ️ Email already analyzed, skipping silent AI: ${email.subject}');
+        print(
+          'ℹ️ Email already analyzed, skipping silent AI: ${email.subject}',
+        );
         return;
       }
-      
+
       // Phân tích AI (chạy ngầm)
-      final result = await analysisService.analyzeEmail(email);
-      
+      // FIX: Fetch full email content before analyzing
+      // Email received from list mostly contains snippet only
+      print('Fetching full content for accurate analysis...');
+      final fullEmail = await _gmailService.fetchEmailDetails(email.id);
+
+      final result = await analysisService.analyzeEmail(fullEmail ?? email);
+
       // Lưu kết quả vào database
       await scanHistoryService.saveScanResult(result);
       print('✅ Analysis saved silently: ${result.result}');
-      
+
       // Lưu email cache
       final emailJson = jsonEncode({
         'id': email.id,
@@ -177,7 +189,7 @@ class EmailMonitorService {
         'date': email.date.toIso8601String(),
       });
       await storage.write(key: 'email_cache_${email.id}', value: emailJson);
-      
+
       // Gửi thêm một thông báo kết quả phân tích để user biết email đó
       // nguy hiểm / nghi ngờ / an toàn là email nào.
       final data = {
@@ -196,9 +208,7 @@ class EmailMonitorService {
         final l = AppLocalizations(locale);
         await _notificationService.showNotification(
           title: l.t('notif_phishing_title'),
-          body: l
-              .t('notif_phishing_body')
-              .replaceFirst('{from}', email.from),
+          body: l.t('notif_phishing_body').replaceFirst('{from}', email.from),
           type: 'phishing',
           data: data,
         );
@@ -207,9 +217,7 @@ class EmailMonitorService {
         final l = AppLocalizations(locale);
         await _notificationService.showNotification(
           title: l.t('notif_suspicious_title'),
-          body: l
-              .t('notif_suspicious_body')
-              .replaceFirst('{from}', email.from),
+          body: l.t('notif_suspicious_body').replaceFirst('{from}', email.from),
           type: 'security',
           data: data,
         );
@@ -218,14 +226,11 @@ class EmailMonitorService {
         final l = AppLocalizations(locale);
         await _notificationService.showNotification(
           title: l.t('notif_safe_title'),
-          body: l
-              .t('notif_safe_body')
-              .replaceFirst('{from}', email.from),
+          body: l.t('notif_safe_body').replaceFirst('{from}', email.from),
           type: 'safe',
           data: data,
         );
       }
-      
     } catch (e) {
       print('⚠️ Silent analysis failed (not critical): $e');
       // Không hiển thị lỗi cho user, chỉ log
@@ -239,7 +244,7 @@ class EmailMonitorService {
     if (nameMatch != null) {
       return nameMatch.group(1)?.trim() ?? from;
     }
-    
+
     // Nếu chỉ có email, lấy phần trước @
     final emailMatch = RegExp(r'^([^@<\s]+)').firstMatch(from);
     return emailMatch?.group(1) ?? from;

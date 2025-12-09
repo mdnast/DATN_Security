@@ -103,6 +103,57 @@ class GmailService {
     }
   }
 
+  // Fetch single email with FULL content
+  Future<EmailMessage?> fetchEmailDetails(String id) async {
+    try {
+      final loginMethod = await _authService.getLoginMethod();
+
+      if (loginMethod == 'google') {
+        final accessToken = await _authService.getGoogleAccessToken();
+        if (accessToken == null) throw Exception('No access token available');
+
+        final credentials = AccessCredentials(
+          AccessToken(
+            'Bearer',
+            accessToken,
+            DateTime.now().toUtc().add(const Duration(hours: 1)),
+          ),
+          null,
+          ['https://www.googleapis.com/auth/gmail.readonly'],
+        );
+
+        final client = authenticatedClient(
+          _GoogleAuthClient(accessToken),
+          credentials,
+        );
+
+        final gmailApi = gmail.GmailApi(client);
+
+        // Fetch FULL message format (default is 'full' which includes body)
+        final message = await gmailApi.users.messages.get('me', id);
+
+        client.close();
+        return await _parseGmailMessage(message);
+      } else {
+        // IMAP implementation
+        // For IMAP, we might need to reconnect and fetch specific UID
+        // simplified: reuse fetchEmails logic or implement specific fetch if needed
+        // Since `enough_mail` doesn't easily support fetching by random String ID
+        // without keeping connection open or knowing sequence ID,
+        // we might stick to what we have or re-fetch.
+        // However, for this bug fix, let's try to support Google first or
+        // assume IMAP logic needs similar care if it was broken.
+        // Re-using fetchEmailsViaImap logic but filtering?
+        // Valid IMAP ID is sequence ID usually which changes.
+        // For now, let's implement for Google as that seems to be the main target.
+        return null; // TODO: Implement specific IMAP fetch if strictly needed
+      }
+    } catch (e) {
+      print('Error fetching email details: $e');
+      return null;
+    }
+  }
+
   Future<void> sendEmail({
     required String to,
     required String subject,
