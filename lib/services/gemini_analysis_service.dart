@@ -3,12 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'locale_service.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class GeminiAnalysisService {
-  // API Key - NÊN LƯU TRONG .env HOẶC SECURE STORAGE
-  // Tạm thời hardcode để test, sau này cần di chuyển ra ngoài
-  static const String _apiKey = 'AIzaSyBcFkPZWI0npRvYiQ55tZHSG_cm79Vv_5A';
-  // API key dành riêng cho chatbot (hỏi đáp), nên thay bằng key mới của bạn
-  static const String _chatApiKey = 'AIzaSyAgvmioOQ87JgTFgIftoFAwF5T02v5_NkE';
+  // API Key - Managed via .env
+  static final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+  // API key dành riêng cho chatbot (hỏi đáp)
+  static final String _chatApiKey = dotenv.env['GEMINI_CHAT_API_KEY'] ?? '';
 
   // Danh sách models để fallback nếu model chính lỗi
   static const List<String> _availableModels = [

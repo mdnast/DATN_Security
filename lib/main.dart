@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/notification_service.dart';
 import 'services/background_email_service.dart';
 import 'services/auto_start_service.dart';
@@ -20,19 +21,22 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp();
-  
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
   // Initialize notification service
   await NotificationService().initialize();
-  
+
   // Set navigator key cho notification service
   NotificationService.setNavigatorKey(navigatorKey);
-  
+
   // Initialize background email service (WorkManager)
   await BackgroundEmailService.initialize();
-  
+
   // ✅ TỰ ĐỘNG CHECK VÀ RESTART BACKGROUND SERVICE NẾU CẦN
   // Sẽ tự động chạy ngay cả sau khi reboot device
   await AutoStartService.checkAndRestart();
@@ -79,7 +83,8 @@ class MyApp extends StatelessWidget {
                 '/home': (context) => const HomeScreen(),
                 '/email-register': (context) => const EmailRegisterScreen(),
                 '/email-login': (context) => const EmailLoginScreen(),
-                '/email-verification': (context) => const EmailVerificationScreen(),
+                '/email-verification': (context) =>
+                    const EmailVerificationScreen(),
                 '/biometric-lock': (context) => const BiometricLockScreen(),
               },
             );
@@ -118,16 +123,12 @@ ThemeData _buildLightTheme() {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
       fillColor: Colors.grey[50],
     ),
@@ -165,16 +166,12 @@ ThemeData _buildDarkTheme() {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
       fillColor: const Color(0xFF121212),
     ),
