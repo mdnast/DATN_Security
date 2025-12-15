@@ -54,6 +54,22 @@ WardMail is a Flutter mobile/desktop application that helps users detect and avo
 
 ---
 
+## 📸 Screenshots
+
+| <img src="screenshots/login_screen.png" width="200" /> | <img src="screenshots/register_screen.png" width="200" /> | <img src="screenshots/menu_screen.png" width="200" /> |
+|:---:|:---:|:---:|
+| **Login** | **Register** | **Menu** |
+
+| <img src="screenshots/inbox_screen.png" width="200" /> | <img src="screenshots/notification_screen.png" width="200" /> | <img src="screenshots/settings_screen.png" width="200" /> |
+|:---:|:---:|:---:|
+| **Inbox** | **Notifications** | **Settings** |
+
+| <img src="screenshots/visual_check_analysis_screen.png" width="200" /> | <img src="screenshots/compose_email_screen.png" width="200" /> | <img src="screenshots/chat_ai_screen.png" width="200" /> |
+|:---:|:---:|:---:|
+| **Analysis Details** | **Compose Email** | **Chat AI** |
+
+---
+
 ## 🛠 Tech stack & main packages
 
 ### Language & framework
@@ -174,8 +190,6 @@ lib/
 ---
 
 ## 👨‍💻 Author
-
-**Team 2**  
 Contact email: **datlecong156@gmail.com**
 
 ---
